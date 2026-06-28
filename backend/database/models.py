@@ -1,11 +1,30 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
+from datetime import datetime
 from .db import Base
 
-class Driver(Base):
-  __tablename__ = "drivers"
 
-  id = Column(Integer, primary_key=True, index=True)
-  first_name = Column(String)
-  last_name = Column(String)
-  cdl_nuber = Column(String)
-  phone = Column(String)
+class Company(Base):
+    __tablename__ = "companies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_name = Column(String, index=True)
+    owner_name = Column(String)
+    phone = Column(String)
+    email = Column(String, unique=True, index=True)
+    address = Column(String)
+    city = Column(String)
+    state = Column(String)
+    zip_code = Column(String)
+    industry = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Driver(Base):
+    __tablename__ = "drivers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String)
+    last_name = Column(String)
+    cdl_number = Column(String)
+    phone = Column(String)  
+    company_id = Column(Integer)
