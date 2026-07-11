@@ -1,3 +1,11 @@
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+# local imports - adjust paths if your project layout differs
+from ..database.db import SessionLocal
+from ..database.models import Driver
+
+
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
 
 

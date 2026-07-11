@@ -55,3 +55,14 @@ class Job(Base):
     vehicle = Column(String)
     status = Column(String, default="Waiting")
     price = Column(Float)
+
+
+class LogBookEntry(Base):
+    __tablename__ = "logbook_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    driver_id = Column(String, index=True)
+    status = Column(String)
+    location = Column(String)
+    notes = Column(String, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)

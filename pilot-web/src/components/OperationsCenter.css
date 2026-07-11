@@ -1,0 +1,89 @@
+.ops-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ops-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ops-panel {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.07);
+}
+
+.ops-panel h3 {
+  margin-top: 0;
+}
+
+.ops-panel label {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.ops-panel input,
+.ops-panel select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.ops-panel button {
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.ops-result {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.ops-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.ops-note {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.ops-form-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ops-hos-row {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 980px) {
+  .ops-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-form-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,14 @@
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.venv/
+**/node_modules/
+**/dist/
+**/.DS_Store
+**/*.log
+.env
+.env.*
+pilot.db
+backend/pilot.db
+frontend/dist/
+pilot-web/dist/

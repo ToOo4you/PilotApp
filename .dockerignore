@@ -1,0 +1,12 @@
+**/.git
+**/.github
+**/.vscode
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.venv
+**/node_modules
+**/dist
+**/.DS_Store
+**/*.log
+pilot.db

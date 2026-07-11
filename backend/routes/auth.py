@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from backend.auth.security import hash_password, verify_password
+from backend.auth.security import hash_password, verify_password, is_legacy_sha256_hash
 from backend.database.db import SessionLocal
 from backend.database.models import User
 
@@ -24,7 +24,7 @@ def register_user(user: UserRegister):
         first_name=user.first_name,
         last_name=user.last_name,
         email=user.email,
-        hashed_password=hash_pasword(user.passwor),
+        hashed_password=hash_password(user.password),
         role=user.role
     )
 
@@ -60,6 +60,11 @@ def login_user(user: UserLogin):
     if not verify_password(user.password, existing_user.hashed_password):
         db.close()
         return {"error": "Invalid password"}
+
+    # Migrate old SHA-256 hashes to bcrypt after successful login.
+    if is_legacy_sha256_hash(existing_user.hashed_password):
+        existing_user.hashed_password = hash_password(user.password)
+        db.commit()
 
     db.close()
 

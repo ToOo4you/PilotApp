@@ -1,0 +1,268 @@
+/* Driver Analytics Styles */
+.driver-analytics {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.driver-analytics h2 {
+  color: #333;
+  margin-bottom: 20px;
+  border-bottom: 3px solid #17a2b8;
+  padding-bottom: 10px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.drivers-list-section,
+.analytics-result-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.drivers-list-section h3,
+.analytics-result-section h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #17a2b8;
+  padding-bottom: 10px;
+}
+
+.drivers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.driver-selection {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.driver-selection:hover {
+  background: #e8f5e9;
+  border-left-color: #17a2b8;
+  transform: translateX(5px);
+}
+
+.driver-selection.active {
+  background: #cfe9f3;
+  border-left-color: #17a2b8;
+  font-weight: 500;
+}
+
+.driver-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.name {
+  font-weight: 600;
+  color: #333;
+}
+
+.rating {
+  color: #ff9800;
+}
+
+.driver-stats {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85em;
+  color: #666;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.loading,
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #999;
+  font-size: 1.1em;
+}
+
+.analytics-result {
+  animation: slideIn 0.3s ease-out;
+}
+
+.performance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.performance-header h3 {
+  margin: 0;
+  color: #333;
+  border: none;
+  padding: 0;
+}
+
+.performance-level {
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.scores-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+@media (max-width: 768px) {
+  .scores-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.score-card {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-top: 3px solid #17a2b8;
+}
+
+.score-label {
+  display: block;
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.score-bar {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #17a2b8, #138496);
+  transition: width 0.5s ease;
+}
+
+.score-fill.danger-fill {
+  background: linear-gradient(90deg, #dc3545, #c82333);
+}
+
+.score-bar.danger {
+  background: #ffe0e0;
+}
+
+.score-value {
+  display: block;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #17a2b8;
+  text-align: center;
+}
+
+.insights-sections {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .insights-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insight-box {
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.insight-box h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.95em;
+}
+
+.insight-box ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.insight-box li {
+  margin: 5px 0;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.insight-box.success {
+  background: #e8f5e9;
+  border-left-color: #28a745;
+  color: #1b5e20;
+}
+
+.insight-box.success h4 {
+  color: #28a745;
+}
+
+.insight-box.warning {
+  background: #fff3cd;
+  border-left-color: #ffc107;
+  color: #856404;
+}
+
+.insight-box.warning h4 {
+  color: #ff9800;
+}
+
+.insight-box.danger {
+  background: #ffe0e0;
+  border-left-color: #dc3545;
+  color: #721c24;
+}
+
+.insight-box.danger h4 {
+  color: #dc3545;
+}
+
+.insight-box.info {
+  background: #e3f2fd;
+  border-left-color: #1976d2;
+  color: #0d47a1;
+}
+
+.insight-box.info h4 {
+  color: #1976d2;
+}
