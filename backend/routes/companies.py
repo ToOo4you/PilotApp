@@ -1,11 +1,13 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+import logging
 
 from backend.database.db import SessionLocal
 from backend.database.models import Company
 
 
 router = APIRouter(prefix="/companies", tags=["Companies"])
+logger = logging.getLogger(__name__)
 
 
 class CompanyCreate(BaseModel):
@@ -23,9 +25,29 @@ class CompanyCreate(BaseModel):
 @router.get("/")
 def get_companies():
     db = SessionLocal()
-    companies = db.query(Company).all()
-    db.close()
-    return companies
+    try:
+        companies = db.query(Company).all()
+        return [
+            {
+                "id": c.id,
+                "company_name": c.company_name,
+                "owner_name": c.owner_name,
+                "phone": c.phone,
+                "email": c.email,
+                "address": c.address,
+                "city": c.city,
+                "state": c.state,
+                "zip_code": c.zip_code,
+                "industry": c.industry,
+                "created_at": c.created_at,
+            }
+            for c in companies
+        ]
+    except Exception as exc:
+        logger.exception("Failed to load companies: %s", exc)
+        return []
+    finally:
+        db.close()
 
 
 @router.post("/")
