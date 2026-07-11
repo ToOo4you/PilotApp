@@ -12,6 +12,9 @@ def _normalize_database_url(raw_url: str) -> str:
         database_url = database_url.replace("postgres://", "postgresql://", 1)
 
     if database_url.startswith("postgresql://"):
+        database_url = database_url.replace("postgresql://", "postgresql+pg8000://", 1)
+
+    if database_url.startswith("postgresql+pg8000://"):
         parsed = urlparse(database_url)
         query = dict(parse_qsl(parsed.query, keep_blank_values=True))
 
