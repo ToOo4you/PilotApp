@@ -14,16 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from backend.database.db import engine
 from backend.database.models import Base, Company
-from backend.routes.companies import router as companies_router
-from backend.routes.drivers import router as drivers_router
-from backend.routes.auth import router as auth_router
-from backend.routes.dashboard import router as dashboard_router
-from backend.routes.jobs import router as jobs_router
-from backend.routes.customers import router as customers_router
-from backend.routes.ai_routes import router as ai_router
-from backend.routes.operations import router as operations_router
 from fastapi import APIRouter
-from backend.routes.trailers import router as trailers_router
 from pydantic import BaseModel
 
 try:
@@ -308,6 +299,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Import routers after app and middleware setup to reduce import-time side effects.
+from backend.routes.companies import router as companies_router
+from backend.routes.drivers import router as drivers_router
+from backend.routes.auth import router as auth_router
+from backend.routes.dashboard import router as dashboard_router
+from backend.routes.jobs import router as jobs_router
+from backend.routes.customers import router as customers_router
+from backend.routes.ai_routes import router as ai_router
+from backend.routes.operations import router as operations_router
+from backend.routes.trailers import router as trailers_router
+
 app.include_router(companies_router)
 app.include_router(drivers_router)
 app.include_router(auth_router)
