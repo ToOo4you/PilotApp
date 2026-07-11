@@ -1,6 +1,38 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://pilotapp.onrender.com/api/:path*"
+    },
+    {
+      "source": "/companies/:path*",
+      "destination": "https://pilotapp.onrender.com/companies/:path*"
+    },
+    {
+      "source": "/customers/:path*",
+      "destination": "https://pilotapp.onrender.com/customers/:path*"
+    },
+    {
+      "source": "/drivers/:path*",
+      "destination": "https://pilotapp.onrender.com/drivers/:path*"
+    },
+    {
+      "source": "/trucks/:path*",
+      "destination": "https://pilotapp.onrender.com/trucks/:path*"
+    },
+    {
+      "source": "/jobs/:path*",
+      "destination": "https://pilotapp.onrender.com/jobs/:path*"
+    },
+    {
+      "source": "/ops/:path*",
+      "destination": "https://pilotapp.onrender.com/ops/:path*"
+    },
+    {
+      "source": "/jax/:path*",
+      "destination": "https://pilotapp.onrender.com/jax/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
