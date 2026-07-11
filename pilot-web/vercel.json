@@ -1,6 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/companies/",
+      "destination": "https://pilotapp.onrender.com/companies/"
+    },
+    {
+      "source": "/customers/",
+      "destination": "https://pilotapp.onrender.com/customers/"
+    },
+    {
+      "source": "/drivers/",
+      "destination": "https://pilotapp.onrender.com/drivers/"
+    },
+    {
+      "source": "/trucks/",
+      "destination": "https://pilotapp.onrender.com/trucks/"
+    },
+    {
+      "source": "/jobs/",
+      "destination": "https://pilotapp.onrender.com/jobs/"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://pilotapp.onrender.com/api/:path*"
     },
