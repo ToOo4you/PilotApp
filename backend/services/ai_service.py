@@ -36,6 +36,8 @@ class OpenAIProvider(AIProvider):
     
     def __init__(self, api_key: str = None):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("OPENAI_API_KEY is not configured")
         openai.api_key = self.api_key
         self.client = openai.OpenAI(api_key=self.api_key)
     
@@ -59,6 +61,8 @@ class ClaudeProvider(AIProvider):
     
     def __init__(self, api_key: str = None):
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        if not self.api_key:
+            raise RuntimeError("ANTHROPIC_API_KEY is not configured")
         self.client = Anthropic(api_key=self.api_key)
     
     async def call(self, prompt: str, model: str = "claude-3-opus-20240229", **kwargs) -> str:
@@ -80,8 +84,21 @@ class AIServiceManager:
     """Central manager for AI services"""
     
     def __init__(self):
-        self.openai_provider = OpenAIProvider() if openai is not None else None
-        self.claude_provider = ClaudeProvider() if Anthropic is not None else None
+        self.openai_provider = None
+        self.claude_provider = None
+
+        if openai is not None:
+            try:
+                self.openai_provider = OpenAIProvider()
+            except Exception as exc:
+                logger.warning("OpenAI provider unavailable: %s", exc)
+
+        if Anthropic is not None:
+            try:
+                self.claude_provider = ClaudeProvider()
+            except Exception as exc:
+                logger.warning("Anthropic provider unavailable: %s", exc)
+
         self.primary_provider = os.getenv("AI_MODEL_PRIMARY", "openai")
         default_mock = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
         self.mock_mode = os.getenv("AI_MOCK_MODE", default_mock).lower() == "true"

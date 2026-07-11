@@ -282,7 +282,17 @@ trucks = [
 @trucks_router.get("/")
 def get_trucks():
     return trucks
-Base.metadata.create_all(bind=engine)
+
+
+@app.on_event("startup")
+def initialize_database_schema():
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database schema initialization completed")
+    except Exception as exc:
+        logger.exception("Database schema initialization failed: %s", exc)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_load_allowed_origins(),
