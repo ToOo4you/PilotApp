@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './RouteOptimizer.css';
+import { API_BASE_URL } from '../lib/api';
 
 const RouteOptimizer = () => {
   const [stops, setStops] = useState([]);
@@ -27,7 +28,7 @@ const RouteOptimizer = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/ai/optimize-route', {
+      const response = await fetch(`${API_BASE_URL}/api/ai/optimize-route`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

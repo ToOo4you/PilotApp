@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './DispatchDashboard.css';
+import { API_BASE_URL } from '../lib/api';
 
 const DispatchDashboard = () => {
   const [jobs, setJobs] = useState([
@@ -21,7 +22,7 @@ const DispatchDashboard = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/ai/batch-dispatch', {
+      const response = await fetch(`${API_BASE_URL}/api/ai/batch-dispatch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

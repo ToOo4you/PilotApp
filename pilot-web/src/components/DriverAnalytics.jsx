@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './DriverAnalytics.css';
+import { API_BASE_URL } from '../lib/api';
 
 const DriverAnalytics = () => {
   const [selectedDriver, setSelectedDriver] = useState(null);
@@ -32,7 +33,7 @@ const DriverAnalytics = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/api/ai/driver-analytics/${driver.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/ai/driver-analytics/${driver.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

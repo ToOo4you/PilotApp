@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './MaintenancePredictor.css';
+import { API_BASE_URL } from '../lib/api';
 
 const MaintenancePredictor = () => {
   const [vehicles, setVehicles] = useState([
@@ -15,7 +16,7 @@ const MaintenancePredictor = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/ai/predict-maintenance', {
+      const response = await fetch(`${API_BASE_URL}/api/ai/predict-maintenance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

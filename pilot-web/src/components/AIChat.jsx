@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './AIChat.css';
+import { API_BASE_URL } from '../lib/api';
 
 const AIChat = ({ sessionId = 'default' }) => {
   const [messages, setMessages] = useState([]);
@@ -16,20 +17,18 @@ const AIChat = ({ sessionId = 'default' }) => {
     setMessages(prev => [...prev, userMessage]);
     
     try {
-      const response = await fetch('http://localhost:8000/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: sessionId,
-          message: input,
-          context_data: {
-            active_drivers: 12,
-            pending_jobs: 5,
-            vehicles_in_use: 8,
-            active_routes: 3
-          }
-        })
+      const params = new URLSearchParams({
+        session_id: sessionId,
+        message: input
       });
+
+      const response = await fetch(`${API_BASE_URL}/api/ai/chat?${params.toString()}`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
 
       const data = await response.json();
       if (data.status === 'success') {
@@ -42,9 +41,26 @@ const AIChat = ({ sessionId = 'default' }) => {
         };
         setMessages(prev => [...prev, aiMessage]);
         setSuggestions(data.response.followup_questions || []);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: 'I could not process that request. Please try again.',
+            timestamp: new Date().toISOString()
+          }
+        ]);
       }
     } catch (error) {
       console.error('Chat error:', error);
+      setMessages(prev => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'Chat service is unavailable right now. Please try again in a moment.',
+          timestamp: new Date().toISOString()
+        }
+      ]);
     } finally {
       setLoading(false);
       setInput('');

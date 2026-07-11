@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from './lib/api';
 
 export default function Drivers() {
   const [drivers, setDrivers] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/drivers/")
+    fetch(`${API_BASE_URL}/drivers/`)
       .then((res) => res.json())
       .then((data) => setDrivers(data))
       .catch((err) => console.error("Drivers error:", err));

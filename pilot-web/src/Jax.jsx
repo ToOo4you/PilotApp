@@ -1,4 +1,18 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from './lib/api';
+
+const askJax = async (task) => {
+  const response = await fetch(`${API_BASE_URL}/jax/ask`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ task }),
+  });
+
+  const data = await response.json();
+  alert(data.message);
+};
 
 export default function Jax() {
   const [drivers, setDrivers] = useState([]);
@@ -7,19 +21,19 @@ export default function Jax() {
   const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/drivers/")
+    fetch(`${API_BASE_URL}/drivers/`)
       .then((res) => res.json())
       .then(setDrivers);
 
-    fetch("http://127.0.0.1:8000/trucks/")
+    fetch(`${API_BASE_URL}/trucks/`)
       .then((res) => res.json())
       .then(setTrucks);
 
-    fetch("http://127.0.0.1:8000/companies/")
+    fetch(`${API_BASE_URL}/companies/`)
       .then((res) => res.json())
       .then(setCompanies);
 
-    fetch("http://127.0.0.1:8000/customers/")
+    fetch(`${API_BASE_URL}/customers/`)
       .then((res) => res.json())
       .then(setCustomers);
   }, []);
