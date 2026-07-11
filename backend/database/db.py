@@ -19,6 +19,10 @@ def _normalize_database_url(raw_url: str) -> str:
         if "sslmode" not in query:
             query["sslmode"] = "require"
 
+        # Avoid long startup hangs if Postgres is temporarily unavailable.
+        if "connect_timeout" not in query:
+            query["connect_timeout"] = "10"
+
         parsed = parsed._replace(query=urlencode(query))
         return urlunparse(parsed)
 

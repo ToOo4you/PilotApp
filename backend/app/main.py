@@ -286,6 +286,14 @@ def get_trucks():
 
 @app.on_event("startup")
 def initialize_database_schema():
+    auto_init = os.getenv("DB_AUTO_INIT")
+    if auto_init is None:
+        auto_init = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
+
+    if auto_init.lower() != "true":
+        logger.info("Skipping automatic database schema initialization (DB_AUTO_INIT=%s)", auto_init)
+        return
+
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database schema initialization completed")
