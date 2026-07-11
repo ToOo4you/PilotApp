@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Float
 from datetime import datetime
 from .db import Base
 
@@ -40,3 +41,17 @@ class Driver(Base):
     cdl_number = Column(String)
     phone = Column(String)  
     company_id = Column(Integer)
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(Integer)
+    driver_id = Column(Integer)
+    customer_name = Column(String)
+    phone = Column(String)
+    pickup = Column(String)
+    destination = Column(String)
+    vehicle = Column(String)
+    status = Column(String, default="Waiting")
+    price = Column(Float)
