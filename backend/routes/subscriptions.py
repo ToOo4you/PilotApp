@@ -278,7 +278,7 @@ def create_billing_support_request(body: BillingSupportRequestBody):
     ):
         raise HTTPException(
             status_code=400,
-            detail="Each transaction must include an ID and date.",
+            detail="Each transaction must include an ID, date, and status.",
         )
 
     statuses = {"pending", "completed", "unknown"}

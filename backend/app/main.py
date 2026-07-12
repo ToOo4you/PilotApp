@@ -281,6 +281,7 @@ def initialize_database_schema():
         BillingSupportRequest.__table__.create(bind=engine, checkfirst=True)
     except Exception as exc:
         logger.exception("Billing support table initialization failed: %s", exc)
+        raise
 
     auto_init = os.getenv("DB_AUTO_INIT")
     if auto_init is None:

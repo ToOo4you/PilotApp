@@ -34,7 +34,8 @@ function App() {
           setBillingVerificationError('');
           setSubscription({ ...status, email, plan: status.plan || plan });
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Subscription verification failed:', error);
           setBillingVerificationError('We could not verify your subscription access yet. Please try again or contact billing support.');
           setSubscription({ subscribed: false, plan, status: 'pending', email });
         });
