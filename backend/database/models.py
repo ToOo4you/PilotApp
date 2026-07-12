@@ -74,7 +74,7 @@ class Subscription(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     email = Column(String, index=True)
     plan = Column(String)  # starter | professional | enterprise
-    status = Column(String, default="inactive")  # active | inactive | cancelled | trialing | past_due
+    status = Column(String, default="inactive")  # active | inactive | cancelled | past_due
     stripe_customer_id = Column(String, nullable=True, index=True)
     stripe_subscription_id = Column(String, nullable=True, index=True)
     current_period_end = Column(DateTime, nullable=True)
