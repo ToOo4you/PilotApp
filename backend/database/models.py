@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, JSON
 from datetime import datetime
 from .db import Base
 
@@ -87,9 +87,9 @@ class BillingSupportRequest(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, index=True, nullable=False)
-    transaction_ids = Column(String, nullable=False)
-    transaction_dates = Column(String, nullable=False)
-    transaction_statuses = Column(String, nullable=False)
+    transaction_ids = Column(JSON, nullable=False)
+    transaction_dates = Column(JSON, nullable=False)
+    transaction_statuses = Column(JSON, nullable=False)
     issue = Column(String, nullable=False)
     status = Column(String, default="open", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)

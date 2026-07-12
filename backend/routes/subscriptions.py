@@ -292,9 +292,9 @@ def create_billing_support_request(body: BillingSupportRequestBody):
         BillingSupportRequest.__table__.create(bind=engine, checkfirst=True)
         support_request = BillingSupportRequest(
             email=body.email,
-            transaction_ids="\n".join(item.strip() for item in body.transaction_ids),
-            transaction_dates="\n".join(item.strip() for item in body.transaction_dates),
-            transaction_statuses="\n".join(normalized_statuses),
+            transaction_ids=[item.strip() for item in body.transaction_ids],
+            transaction_dates=[item.strip() for item in body.transaction_dates],
+            transaction_statuses=normalized_statuses,
             issue=body.issue.strip(),
         )
         db.add(support_request)

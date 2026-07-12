@@ -17,6 +17,7 @@ function App() {
   const [companies, setCompanies] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [subscription, setSubscription] = useState(null);
+  const [billingVerificationError, setBillingVerificationError] = useState('');
 
   // Check if returning from Stripe Checkout success redirect
   useEffect(() => {
@@ -25,9 +26,18 @@ function App() {
       const plan = params.get('plan') || '';
       const email = params.get('email') || '';
       fetch(`${API_BASE_URL}/subscriptions/status?email=${encodeURIComponent(email)}`)
-        .then((response) => response.json())
-        .then((status) => setSubscription({ ...status, email, plan: status.plan || plan }))
-        .catch(() => setSubscription({ subscribed: false, plan, status: 'pending', email }));
+        .then((response) => {
+          if (!response.ok) throw new Error('Subscription status unavailable');
+          return response.json();
+        })
+        .then((status) => {
+          setBillingVerificationError('');
+          setSubscription({ ...status, email, plan: status.plan || plan });
+        })
+        .catch(() => {
+          setBillingVerificationError('We could not verify your Professional access yet. Please try again or contact billing support.');
+          setSubscription({ subscribed: false, plan, status: 'pending', email });
+        });
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -59,6 +69,15 @@ function App() {
           {subscription?.subscribed && (
             <div className="subscription-banner">
               ✅ Active subscription · <strong>{subscription.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Plan'}</strong> plan
+            </div>
+          )}
+
+          {billingVerificationError && (
+            <div className="subscription-cta">
+              <span>{billingVerificationError}</span>
+              <button className="subscription-cta-btn" onClick={() => setPage('Billing Support')}>
+                Billing Support
+              </button>
             </div>
           )}
 
