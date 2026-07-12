@@ -17,7 +17,6 @@ function App() {
   const [companies, setCompanies] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [subscription, setSubscription] = useState(null);
-  const [billingEmail, setBillingEmail] = useState('');
 
   // Check if returning from Stripe Checkout success redirect
   useEffect(() => {
@@ -25,7 +24,6 @@ function App() {
     if (params.get('subscribed') === 'true') {
       const plan = params.get('plan') || '';
       const email = params.get('email') || '';
-      setBillingEmail(email);
       fetch(`${API_BASE_URL}/subscriptions/status?email=${encodeURIComponent(email)}`)
         .then((response) => response.json())
         .then((status) => setSubscription({ ...status, email, plan: status.plan || plan }))
@@ -88,7 +86,7 @@ function App() {
     }
 
     if (page === 'Billing Support') {
-      return <BillingSupport defaultEmail={billingEmail} />;
+      return <BillingSupport defaultEmail={subscription?.email || ''} />;
     }
 
     if (page === 'Companies') {
