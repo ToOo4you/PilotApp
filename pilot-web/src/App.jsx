@@ -8,12 +8,26 @@ import DispatchDashboard from './components/DispatchDashboard';
 import DriverAnalytics from './components/DriverAnalytics';
 import MaintenancePredictor from './components/MaintenancePredictor';
 import OperationsCenter from './components/OperationsCenter';
+import Pricing from './components/Pricing';
 import { API_BASE_URL } from './lib/api';
 
 function App() {
   const [page, setPage] = useState('Dashboard');
   const [companies, setCompanies] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [subscription, setSubscription] = useState(null);
+
+  // Check if returning from Stripe Checkout success redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('subscribed') === 'true') {
+      const plan = params.get('plan') || '';
+      const email = params.get('email') || '';
+      setSubscription({ subscribed: true, plan, status: 'active', email });
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/customers/`)
@@ -38,6 +52,21 @@ function App() {
             </div>
           </div>
 
+          {subscription?.subscribed && (
+            <div className="subscription-banner">
+              ✅ Active subscription · <strong>{subscription.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Plan'}</strong> plan
+            </div>
+          )}
+
+          {!subscription?.subscribed && (
+            <div className="subscription-cta">
+              <span>🚀 Ready to automate your operations?</span>
+              <button className="subscription-cta-btn" onClick={() => setPage('Subscribe')}>
+                Subscribe Now
+              </button>
+            </div>
+          )}
+
           <div className="cards">
             <div className="card"><h3>Companies</h3><p>{companies.length}</p></div>
             <div className="card"><h3>Customers</h3><p>{customers.length}</p></div>
@@ -46,6 +75,10 @@ function App() {
           </div>
         </>
       );
+    }
+
+    if (page === 'Subscribe') {
+      return <Pricing onSubscribed={(sub) => { setSubscription(sub); setPage('Dashboard'); }} />;
     }
 
     if (page === 'Companies') {
@@ -130,6 +163,10 @@ function App() {
         <button onClick={() => setPage('Operations')}>Operations</button>
         <button onClick={() => setPage('Directors')}>AI Directors</button>
         <button onClick={() => setPage('Jax')}>🚚 Operations Director</button>
+        <div className="sidebar-divider" />
+        <button className="sidebar-subscribe-btn" onClick={() => setPage('Subscribe')}>
+          💳 Subscribe
+        </button>
       </aside>
 
       <main className="main">{renderPage()}</main>

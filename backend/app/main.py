@@ -310,6 +310,7 @@ from backend.routes.customers import router as customers_router
 from backend.routes.ai_routes import router as ai_router
 from backend.routes.operations import router as operations_router
 from backend.routes.trailers import router as trailers_router
+from backend.routes.subscriptions import router as subscriptions_router
 
 app.include_router(companies_router)
 app.include_router(drivers_router)
@@ -321,6 +322,7 @@ app.include_router(trucks_router)
 app.include_router(trailers_router)
 app.include_router(ai_router)
 app.include_router(operations_router)
+app.include_router(subscriptions_router)
 
 if FRONTEND_ASSETS_DIR.exists():
     app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS_DIR)), name="frontend-assets")
