@@ -1,0 +1,61 @@
+/* SensoryPanel.css */
+.sensory-page { padding: 40px; max-width: 680px; }
+.sensory-page h1 { font-size: 1.8rem; margin-bottom: 8px; }
+.sensory-page .subtitle { color: var(--text-muted); margin-bottom: 32px; }
+
+.sensory-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.sensory-section h3 { margin-bottom: 18px; font-size: 1.05rem; color: var(--accent-dark); }
+
+.option-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+.option-btn {
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--animation-duration);
+}
+.option-btn .opt-icon { font-size: 1.6rem; display: block; margin-bottom: 6px; }
+.option-btn.active { border-color: var(--accent); background: #ede9fe; color: var(--accent-dark); font-weight: 700; }
+.option-btn:hover   { border-color: var(--accent); }
+
+.toggle-group { display: flex; flex-direction: column; gap: 16px; }
+.toggle-row   { display: flex; justify-content: space-between; align-items: center; }
+.toggle-row label { font-size: 0.97rem; }
+.toggle { position: relative; width: 48px; height: 26px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: var(--border); border-radius: 26px; cursor: pointer;
+  transition: background var(--animation-duration);
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 20px; height: 20px; left: 3px; top: 3px;
+  background: white; border-radius: 50%;
+  transition: transform var(--animation-duration);
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+.preview-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+}
+.preview-box h4 { margin-bottom: 8px; }
+
+.reset-btn { color: var(--text-muted); font-size: 0.85rem; background: none; border: none; text-decoration: underline; margin-top: 8px; cursor: pointer; }

@@ -1,0 +1,115 @@
+/* EducationHub.css */
+.hub { display: flex; min-height: 100vh; }
+
+/* ── Sidebar ── */
+.hub-sidebar {
+  width: 240px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.hub-logo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 20px;
+  padding: 0 8px;
+}
+.hub-logo span { color: var(--text); }
+
+.hub-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: left;
+  transition: background var(--animation-duration), color var(--animation-duration);
+}
+.hub-nav-btn:hover { background: var(--bg); color: var(--text); }
+.hub-nav-btn.active { background: #ede9fe; color: var(--accent); font-weight: 700; }
+.hub-nav-icon { font-size: 1.2rem; width: 22px; text-align: center; }
+
+.hub-sidebar-footer {
+  margin-top: auto;
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Main area ── */
+.hub-main { flex: 1; overflow-y: auto; }
+
+/* ── Dashboard ── */
+.dashboard { padding: 40px; max-width: 960px; }
+
+.dashboard-header { margin-bottom: 32px; }
+.dashboard-header h1 { font-size: 2rem; margin-bottom: 6px; }
+.dashboard-header p { color: var(--text-muted); font-size: 1.05rem; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 22px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat-card .stat-icon { font-size: 2rem; margin-bottom: 8px; }
+.stat-card .stat-value { font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.stat-card .stat-label { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+.quick-actions h2 { margin-bottom: 16px; }
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.action-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform var(--animation-duration), box-shadow var(--animation-duration);
+  text-align: center;
+}
+.action-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+.action-card .ac-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.action-card h3 { font-size: 1rem; margin-bottom: 6px; }
+.action-card p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+/* ── Learner chip in header ── */
+.active-learner-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ede9fe;
+  color: var(--accent-dark);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-top: 10px;
+}
