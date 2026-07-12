@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey, JSON
 from datetime import datetime
 from .db import Base
 
@@ -80,3 +80,16 @@ class Subscription(Base):
     current_period_end = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class BillingSupportRequest(Base):
+    __tablename__ = "billing_support_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=False)
+    transaction_ids = Column(JSON, nullable=False)
+    transaction_dates = Column(JSON, nullable=False)
+    transaction_statuses = Column(JSON, nullable=False)
+    issue = Column(String, nullable=False)
+    status = Column(String, default="open", nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

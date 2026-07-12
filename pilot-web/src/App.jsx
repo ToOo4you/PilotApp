@@ -9,6 +9,7 @@ import DriverAnalytics from './components/DriverAnalytics';
 import MaintenancePredictor from './components/MaintenancePredictor';
 import OperationsCenter from './components/OperationsCenter';
 import Pricing from './components/Pricing';
+import BillingSupport from './components/BillingSupport';
 import { API_BASE_URL } from './lib/api';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
   const [companies, setCompanies] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [subscription, setSubscription] = useState(null);
+  const [billingVerificationError, setBillingVerificationError] = useState('');
 
   // Check if returning from Stripe Checkout success redirect
   useEffect(() => {
@@ -23,7 +25,20 @@ function App() {
     if (params.get('subscribed') === 'true') {
       const plan = params.get('plan') || '';
       const email = params.get('email') || '';
-      setSubscription({ subscribed: true, plan, status: 'active', email });
+      fetch(`${API_BASE_URL}/subscriptions/status?email=${encodeURIComponent(email)}`)
+        .then((response) => {
+          if (!response.ok) throw new Error('Subscription status unavailable');
+          return response.json();
+        })
+        .then((status) => {
+          setBillingVerificationError('');
+          setSubscription({ ...status, email, plan: status.plan || plan });
+        })
+        .catch((error) => {
+          console.error('Subscription verification failed:', error);
+          setBillingVerificationError('We could not verify your subscription access yet. Please try again or contact billing support.');
+          setSubscription({ subscribed: false, plan, status: 'pending', email });
+        });
       // Clean up URL
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -58,6 +73,15 @@ function App() {
             </div>
           )}
 
+          {billingVerificationError && (
+            <div className="subscription-cta">
+              <span>{billingVerificationError}</span>
+              <button className="subscription-cta-btn" onClick={() => setPage('Billing Support')}>
+                Billing Support
+              </button>
+            </div>
+          )}
+
           {!subscription?.subscribed && (
             <div className="subscription-cta">
               <span>🚀 Ready to automate your operations?</span>
@@ -79,6 +103,10 @@ function App() {
 
     if (page === 'Subscribe') {
       return <Pricing onSubscribed={(sub) => { setSubscription(sub); setPage('Dashboard'); }} />;
+    }
+
+    if (page === 'Billing Support') {
+      return <BillingSupport defaultEmail={subscription?.email || ''} />;
     }
 
     if (page === 'Companies') {
@@ -167,6 +195,7 @@ function App() {
         <button className="sidebar-subscribe-btn" onClick={() => setPage('Subscribe')}>
           💳 Subscribe
         </button>
+        <button onClick={() => setPage('Billing Support')}>Billing Support</button>
       </aside>
 
       <main className="main">{renderPage()}</main>

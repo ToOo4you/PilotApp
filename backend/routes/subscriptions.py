@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 
 import stripe
 from fastapi import APIRouter, Header, HTTPException, Request
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from backend.database.db import SessionLocal
-from backend.database.models import Subscription
+from backend.database.models import BillingSupportRequest, Subscription
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
 logger = logging.getLogger(__name__)
@@ -70,6 +70,14 @@ class CheckoutRequest(BaseModel):
     email: EmailStr
     success_url: str
     cancel_url: str
+
+
+class BillingSupportRequestBody(BaseModel):
+    email: EmailStr
+    transaction_ids: list[str] = Field(min_length=1, max_length=3)
+    transaction_dates: list[str] = Field(min_length=1, max_length=3)
+    transaction_statuses: list[str] = Field(min_length=1, max_length=3)
+    issue: str = Field(min_length=10, max_length=2000)
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +254,57 @@ def get_subscription_status(email: str):
             "plan": sub.plan,
             "status": sub.status,
             "current_period_end": sub.current_period_end.isoformat() if sub.current_period_end else None,
+        }
+    finally:
+        db.close()
+
+
+@router.post("/support", status_code=201)
+def create_billing_support_request(body: BillingSupportRequestBody):
+    """Create a support case for duplicate or unresolved billing charges."""
+    if not (
+        len(body.transaction_ids)
+        == len(body.transaction_dates)
+        == len(body.transaction_statuses)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Provide one date and status for each transaction ID.",
+        )
+    if (
+        any(not item.strip() for item in body.transaction_ids)
+        or any(not item.strip() for item in body.transaction_dates)
+        or any(not item.strip() for item in body.transaction_statuses)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Each transaction must include an ID, date, and status.",
+        )
+
+    statuses = {"pending", "completed", "unknown"}
+    normalized_statuses = [status.strip().lower() for status in body.transaction_statuses]
+    if any(status not in statuses for status in normalized_statuses):
+        raise HTTPException(
+            status_code=400,
+            detail="Transaction status must be pending, completed, or unknown.",
+        )
+
+    db = SessionLocal()
+    try:
+        support_request = BillingSupportRequest(
+            email=body.email,
+            transaction_ids=[item.strip() for item in body.transaction_ids],
+            transaction_dates=[item.strip() for item in body.transaction_dates],
+            transaction_statuses=normalized_statuses,
+            issue=body.issue.strip(),
+        )
+        db.add(support_request)
+        db.commit()
+        db.refresh(support_request)
+        return {
+            "case_id": f"BILL-{support_request.id:06d}",
+            "status": support_request.status,
+            "message": "Your billing case was received. Support will review the transaction IDs provided.",
         }
     finally:
         db.close()

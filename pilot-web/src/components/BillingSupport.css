@@ -1,0 +1,71 @@
+.billing-support {
+  max-width: 800px;
+}
+
+.billing-support form {
+  display: grid;
+  gap: 18px;
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.billing-support label {
+  display: grid;
+  gap: 6px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.billing-support input,
+.billing-support select,
+.billing-support textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.billing-support textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.billing-transactions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.billing-transactions fieldset {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.billing-transactions legend {
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.billing-error {
+  color: #b91c1c;
+}
+
+.billing-success {
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+@media (max-width: 700px) {
+  .billing-transactions {
+    grid-template-columns: 1fr;
+  }
+}
