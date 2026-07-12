@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import './AdaptiveLesson.css';
 import { api } from '../lib/api';
 
@@ -22,7 +22,7 @@ export default function AdaptiveLesson({ profile, onSessionEnd }) {
   const [answers, setAnswers] = useState({});
   const [revealed, setRevealed] = useState(false);
   const [error, setError] = useState('');
-  const sessionStart = useState(Date.now())[0];
+  const sessionStartRef = useRef(Date.now());
 
   async function startLesson() {
     if (!config.topic.trim()) { setError('Please enter a topic!'); return; }
@@ -37,6 +37,7 @@ export default function AdaptiveLesson({ profile, onSessionEnd }) {
         lesson_format: config.format,
       });
       setLesson(data.lesson);
+      sessionStartRef.current = Date.now();
       setActivityIndex(0);
       setDoneActivities(new Set());
       setQuiz(null);
@@ -88,7 +89,7 @@ export default function AdaptiveLesson({ profile, onSessionEnd }) {
       subject: config.subject,
       topic: config.topic,
       date: new Date().toISOString(),
-      duration_minutes: Math.round((Date.now() - sessionStart) / 60000),
+      duration_minutes: Math.round((Date.now() - sessionStartRef.current) / 60000),
       quiz_score: score !== null ? `${score}/${quiz.length}` : null,
     });
     setStep('setup');

@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -33,7 +34,8 @@ class _OpenAIProvider(_AIProvider):
         self._client = _openai_mod.OpenAI(api_key=api_key)
 
     async def call(self, prompt: str, model: str = "gpt-4", temperature: float = 0.7, **kwargs) -> str:
-        resp = self._client.chat.completions.create(
+        resp = await asyncio.to_thread(
+            self._client.chat.completions.create,
             model=model,
             messages=[{"role": "user", "content": prompt}],
             temperature=temperature,
@@ -46,7 +48,8 @@ class _ClaudeProvider(_AIProvider):
         self._client = _Anthropic(api_key=api_key)
 
     async def call(self, prompt: str, model: str = "claude-3-opus-20240229", **kwargs) -> str:
-        resp = self._client.messages.create(
+        resp = await asyncio.to_thread(
+            self._client.messages.create,
             model=model,
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],

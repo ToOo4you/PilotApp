@@ -155,5 +155,5 @@ docker compose up --build
 ## 🛠️ Tech Stack
 
 - **Backend**: Python · FastAPI · OpenAI GPT-4 · Anthropic Claude
-- **Frontend**: React 18 · Vite · CSS custom properties (sensory theming)
+- **Frontend**: React 19 · Vite · CSS custom properties (sensory theming)
 - **Deployment**: Docker · Nginx

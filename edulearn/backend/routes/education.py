@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from edulearn.backend.services.education_service import (
     LearnerProfile,
@@ -26,14 +26,14 @@ class ProfileData(BaseModel):
     name: str = "Learner"
     age: int = 10
     grade_level: str = "4th"
-    primary_needs: List[str] = []
+    primary_needs: List[str] = Field(default_factory=list)
     learning_style: str = "visual"
-    interests: List[str] = []
+    interests: List[str] = Field(default_factory=list)
     communication_style: str = "verbal"
-    sensory_preferences: Dict[str, Any] = {}
-    skill_levels: Dict[str, str] = {}
-    strengths: List[str] = []
-    challenges: List[str] = []
+    sensory_preferences: Dict[str, Any] = Field(default_factory=dict)
+    skill_levels: Dict[str, str] = Field(default_factory=dict)
+    strengths: List[str] = Field(default_factory=list)
+    challenges: List[str] = Field(default_factory=list)
 
 
 class LessonRequest(BaseModel):
@@ -47,7 +47,7 @@ class LessonRequest(BaseModel):
 class TutorChatRequest(BaseModel):
     learner_profile: ProfileData
     message: str
-    conversation_history: List[Dict[str, str]] = []
+    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
     current_subject: Optional[str] = None
 
 
@@ -119,7 +119,7 @@ async def generate_lesson(req: LessonRequest):
         }
     except Exception as exc:
         logger.error("generate_lesson endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/tutor/chat")
@@ -145,7 +145,7 @@ async def tutor_chat(req: TutorChatRequest):
         }
     except Exception as exc:
         logger.error("tutor_chat endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/quiz/generate")
@@ -174,7 +174,7 @@ async def generate_quiz(req: QuizRequest):
         }
     except Exception as exc:
         logger.error("generate_quiz endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/progress/analyze")
@@ -200,7 +200,7 @@ async def analyze_progress(req: ProgressRequest):
         }
     except Exception as exc:
         logger.error("analyze_progress endpoint error: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/health")
