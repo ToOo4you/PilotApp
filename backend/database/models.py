@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey
 from datetime import datetime
 from .db import Base
 
@@ -75,7 +74,7 @@ class Subscription(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     email = Column(String, index=True)
     plan = Column(String)  # starter | professional | enterprise
-    status = Column(String, default="inactive")  # active | inactive | cancelled | trialing
+    status = Column(String, default="inactive")  # active | inactive | cancelled | trialing | past_due
     stripe_customer_id = Column(String, nullable=True, index=True)
     stripe_subscription_id = Column(String, nullable=True, index=True)
     current_period_end = Column(DateTime, nullable=True)

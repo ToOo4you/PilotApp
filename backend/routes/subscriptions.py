@@ -67,7 +67,7 @@ def _price_id(plan: str) -> str:
 
 class CheckoutRequest(BaseModel):
     plan: str
-    email: str
+    email: EmailStr
     success_url: str
     cancel_url: str
 
@@ -139,25 +139,15 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
 
     payload = await request.body()
     try:
-        event = stripe.WebhookSignature.verify_header(
-            payload.decode("utf-8"),
-            stripe_signature,
-            webhook_secret,
+        event = stripe.Webhook.construct_event(
+            payload, stripe_signature, webhook_secret
         )
-        # verify_header returns the payload string; parse it into an Event
-        event = stripe.Event.construct_from(
-            stripe.util.convert_to_dict(stripe.Event.parse_raw(payload)),
-            stripe.api_key,
-        )
-    except Exception:
-        # Fall back: parse without signature verification for local testing
-        # (only reached if signature header is missing)
-        try:
-            import json
-            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
-        except Exception as exc:
-            logger.exception("Webhook payload parse failed: %s", exc)
-            raise HTTPException(status_code=400, detail="Invalid webhook payload.")
+    except stripe.errors.SignatureVerificationError as exc:
+        logger.warning("Stripe webhook signature verification failed: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid webhook signature.")
+    except Exception as exc:
+        logger.exception("Webhook payload parse failed: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid webhook payload.")
 
     _handle_event(event)
     return {"received": True}
