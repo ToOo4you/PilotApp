@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  edulearn-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - AI_MODEL_PRIMARY=${AI_MODEL_PRIMARY:-openai}
+      - AI_MOCK_MODE=${AI_MOCK_MODE:-true}
+      - CORS_ORIGINS=http://localhost:5174,http://localhost:4174
+      - APP_ENV=production
+    restart: unless-stopped
+
+  edulearn-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "4174:80"
+    depends_on:
+      - edulearn-backend
+    restart: unless-stopped

@@ -1,0 +1,137 @@
+/* LearnerProfile.css */
+.profile-page { padding: 40px; max-width: 720px; }
+.profile-page h1 { font-size: 1.8rem; margin-bottom: 8px; }
+.profile-page .subtitle { color: var(--text-muted); margin-bottom: 32px; }
+
+.profile-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.profile-section h3 { margin-bottom: 16px; font-size: 1.05rem; color: var(--accent-dark); }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 0.88rem; font-weight: 600; color: var(--text-muted); }
+.form-group input,
+.form-group select {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-family-base);
+  transition: border-color var(--animation-duration);
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* Checkbox chips */
+.chip-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--animation-duration);
+  user-select: none;
+}
+.chip-label:hover { border-color: var(--accent); background: #ede9fe; }
+.chip-label input { display: none; }
+.chip-label.checked { background: #ede9fe; border-color: var(--accent); color: var(--accent-dark); font-weight: 600; }
+
+/* Interest tags */
+.interest-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.interest-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: #ede9fe;
+  color: var(--accent-dark);
+  border-radius: 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.interest-tag button {
+  background: none;
+  border: none;
+  color: var(--accent-dark);
+  font-size: 1rem;
+  padding: 0;
+  line-height: 1;
+}
+.interest-input-row { display: flex; gap: 10px; }
+.interest-input-row input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-family-base);
+}
+
+/* Toggle switches */
+.toggle-group { display: flex; flex-direction: column; gap: 14px; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; }
+.toggle-row label { font-size: 0.95rem; }
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 26px;
+  cursor: pointer;
+  transition: background var(--animation-duration);
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  left: 3px; top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform var(--animation-duration);
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+.profile-actions { display: flex; gap: 12px; margin-top: 8px; }
+
+.save-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
