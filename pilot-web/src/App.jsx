@@ -35,7 +35,7 @@ function App() {
           setSubscription({ ...status, email, plan: status.plan || plan });
         })
         .catch(() => {
-          setBillingVerificationError('We could not verify your Professional access yet. Please try again or contact billing support.');
+          setBillingVerificationError('We could not verify your subscription access yet. Please try again or contact billing support.');
           setSubscription({ subscribed: false, plan, status: 'pending', email });
         });
       // Clean up URL

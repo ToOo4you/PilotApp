@@ -6,7 +6,7 @@ import stripe
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, EmailStr, Field
 
-from backend.database.db import SessionLocal, engine
+from backend.database.db import SessionLocal
 from backend.database.models import BillingSupportRequest, Subscription
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
@@ -271,8 +271,10 @@ def create_billing_support_request(body: BillingSupportRequestBody):
             status_code=400,
             detail="Provide one date and status for each transaction ID.",
         )
-    if any(not item.strip() for item in body.transaction_ids) or any(
-        not item.strip() for item in body.transaction_dates
+    if (
+        any(not item.strip() for item in body.transaction_ids)
+        or any(not item.strip() for item in body.transaction_dates)
+        or any(not item.strip() for item in body.transaction_statuses)
     ):
         raise HTTPException(
             status_code=400,
@@ -289,7 +291,6 @@ def create_billing_support_request(body: BillingSupportRequestBody):
 
     db = SessionLocal()
     try:
-        BillingSupportRequest.__table__.create(bind=engine, checkfirst=True)
         support_request = BillingSupportRequest(
             email=body.email,
             transaction_ids=[item.strip() for item in body.transaction_ids],

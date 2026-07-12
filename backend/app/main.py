@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from backend.database.db import engine
-from backend.database.models import Base, Company
+from backend.database.models import Base, BillingSupportRequest, Company
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -277,6 +277,11 @@ def get_trucks():
 
 @app.on_event("startup")
 def initialize_database_schema():
+    try:
+        BillingSupportRequest.__table__.create(bind=engine, checkfirst=True)
+    except Exception as exc:
+        logger.exception("Billing support table initialization failed: %s", exc)
+
     auto_init = os.getenv("DB_AUTO_INIT")
     if auto_init is None:
         auto_init = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
