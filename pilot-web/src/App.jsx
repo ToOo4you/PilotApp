@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import heroBg from './assets/hero.png';
 import AIChat from './components/AIChat';
 import RouteOptimizer from './components/RouteOptimizer';
 import DispatchDashboard from './components/DispatchDashboard';
@@ -30,8 +31,12 @@ function App() {
     if (page === 'Dashboard') {
       return (
         <>
-          <h1>Highway Pilot AI</h1>
-          <p className="subtitle">AI-powered transportation operations platform</p>
+          <div className="hero-banner" style={{ backgroundImage: `url(${heroBg})` }}>
+            <div className="hero-overlay">
+              <h1 className="hero-title">Highway Pilot AI</h1>
+              <p className="hero-subtitle">AI-powered transportation operations — fully autonomous, always on</p>
+            </div>
+          </div>
 
           <div className="cards">
             <div className="card"><h3>Companies</h3><p>{companies.length}</p></div>
