@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Float, ForeignKey
 from datetime import datetime
 from .db import Base
 
@@ -66,3 +65,18 @@ class LogBookEntry(Base):
     location = Column(String)
     notes = Column(String, default="")
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    email = Column(String, index=True)
+    plan = Column(String)  # starter | professional | enterprise
+    status = Column(String, default="inactive")  # active | inactive | cancelled | past_due
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True, index=True)
+    current_period_end = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
