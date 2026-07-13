@@ -8,6 +8,10 @@ import logging
 import json
 from datetime import datetime
 
+from sqlalchemy import func
+
+from backend.database.db import SessionLocal
+from backend.database.models import Job as JobModel
 from backend.services.route_optimizer import route_optimizer, RouteStop, Location
 from backend.services.dispatch_service import dispatch_service, Driver, Job
 from backend.services.maintenance_service import maintenance_service, VehicleData
@@ -424,6 +428,69 @@ async def get_suggestions(session_id: str, context: str = "general"):
     except Exception as e:
         logger.error(f"Suggestions error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============= Revenue / Earnings =============
+
+@router.get("/earnings/{company_id}")
+async def get_earnings(company_id: int):
+    """Get AI-powered earnings summary for a company"""
+    db = SessionLocal()
+    try:
+        # Total revenue from completed jobs
+        total_revenue = (
+            db.query(func.coalesce(func.sum(JobModel.price), 0))
+            .filter(JobModel.company_id == company_id, JobModel.status == "Completed")
+            .scalar()
+        )
+
+        # Count of completed jobs
+        completed_jobs = (
+            db.query(func.count(JobModel.id))
+            .filter(JobModel.company_id == company_id, JobModel.status == "Completed")
+            .scalar()
+        )
+
+        # Count of pending jobs (potential revenue)
+        pending_jobs_count = (
+            db.query(func.count(JobModel.id))
+            .filter(JobModel.company_id == company_id, JobModel.status.notin_(["Completed", "Cancelled"]))
+            .scalar()
+        )
+
+        pending_revenue = (
+            db.query(func.coalesce(func.sum(JobModel.price), 0))
+            .filter(JobModel.company_id == company_id, JobModel.status.notin_(["Completed", "Cancelled"]))
+            .scalar()
+        )
+
+        # Average job value
+        avg_job_value = (
+            db.query(func.coalesce(func.avg(JobModel.price), 0))
+            .filter(JobModel.company_id == company_id, JobModel.status == "Completed")
+            .scalar()
+        )
+
+        total_revenue = float(total_revenue) if total_revenue else 0.0
+        pending_revenue = float(pending_revenue) if pending_revenue else 0.0
+        avg_job_value = float(avg_job_value) if avg_job_value else 0.0
+
+        return {
+            "status": "success",
+            "earnings": {
+                "total_revenue": total_revenue,
+                "completed_jobs": completed_jobs or 0,
+                "pending_jobs": pending_jobs_count or 0,
+                "pending_revenue": pending_revenue,
+                "average_job_value": round(avg_job_value, 2),
+                "projected_revenue": total_revenue + pending_revenue,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Earnings calculation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
 
 
 # ============= Health Check =============
