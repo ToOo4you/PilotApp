@@ -1,5 +1,3 @@
-from datetime import date, datetime, timezone
-
 from fastapi import APIRouter
 from sqlalchemy import func
 
@@ -17,8 +15,8 @@ def get_dashboard(company_id: int):
         company = db.query(Company).filter(Company.id == company_id).first()
         drivers = db.query(Driver).filter(Driver.company_id == company_id).all()
 
-        # Calculate today's jobs
-        today_jobs = (
+        # Total jobs for the company
+        total_jobs = (
             db.query(Job)
             .filter(Job.company_id == company_id)
             .count()
@@ -45,7 +43,7 @@ def get_dashboard(company_id: int):
             "company": company,
             "driver_count": len(drivers),
             "drivers": drivers,
-            "today_jobs": today_jobs,
+            "today_jobs": total_jobs,
             "active_jobs": active_jobs,
             "revenue_today": revenue_today,
         }
