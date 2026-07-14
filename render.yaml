@@ -45,7 +45,7 @@ services:
       - key: STRIPE_PRICE_ID_ENTERPRISE
         sync: false
       - key: BILLING_MOCK_MODE
-        value: "false"
+        value: "true"
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
