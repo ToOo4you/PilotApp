@@ -1,0 +1,17 @@
+{
+  "name": "Highway Pilot",
+  "short_name": "HighwayPilot",
+  "description": "AI-powered logistics operations platform for dispatch, routing, and fleet intelligence.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B132B",
+  "theme_color": "#0B132B",
+  "icons": [
+    {
+      "src": "/logo-mark.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

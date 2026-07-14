@@ -1,0 +1,111 @@
+.subscription-view {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.subscription-header h1 {
+  margin: 0;
+}
+
+.subscription-header p {
+  margin-top: 0.35rem;
+  color: #6b7280;
+}
+
+.billing-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1f2937;
+  width: fit-content;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+}
+
+.plan-card {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: left;
+  background: #fff;
+  cursor: pointer;
+}
+
+.plan-card.active {
+  border-color: #111827;
+  box-shadow: 0 0 0 2px #111827;
+}
+
+.plan-card h3 {
+  margin: 0;
+}
+
+.plan-card .price {
+  margin: 0.4rem 0 0.8rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.plan-card ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.checkout-box {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 460px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #fff;
+}
+
+.checkout-box input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.checkout-box button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 0.9rem;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.checkout-box button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.checkout-box .secondary-btn {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.status-box {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.7rem;
+  background: #f9fafb;
+}
+
+.status-box p {
+  margin: 0.2rem 0;
+}
+
+.error-msg {
+  margin: 0;
+  color: #b91c1c;
+}

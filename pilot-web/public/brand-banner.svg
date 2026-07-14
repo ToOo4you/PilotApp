@@ -1,0 +1,30 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B132B"/>
+      <stop offset="0.5" stop-color="#1C2541"/>
+      <stop offset="1" stop-color="#3A506B"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="180" y1="170" x2="710" y2="710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5BC0BE"/>
+      <stop offset="1" stop-color="#00A8E8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1300" cy="160" r="220" fill="#5BC0BE" opacity="0.12"/>
+  <circle cx="1540" cy="760" r="260" fill="#00A8E8" opacity="0.14"/>
+
+  <rect x="140" y="140" width="600" height="600" rx="120" fill="#0E1A33" stroke="#324A6C" stroke-width="8"/>
+  <path d="M300 220C300 220 250 300 250 440C250 580 300 660 300 660H390C355 600 338 530 338 440C338 350 355 280 390 220H300Z" fill="url(#accent)"/>
+  <path d="M580 220C580 220 630 300 630 440C630 580 580 660 580 660H490C525 600 542 530 542 440C542 350 525 280 490 220H580Z" fill="url(#accent)"/>
+  <rect x="434" y="260" width="16" height="44" rx="8" fill="#EAFBFF"/>
+  <rect x="434" y="334" width="16" height="44" rx="8" fill="#EAFBFF"/>
+  <rect x="434" y="408" width="16" height="44" rx="8" fill="#EAFBFF"/>
+  <rect x="434" y="482" width="16" height="44" rx="8" fill="#EAFBFF"/>
+  <rect x="434" y="556" width="16" height="44" rx="8" fill="#EAFBFF"/>
+
+  <text x="800" y="370" fill="#EAFBFF" font-family="Segoe UI, sans-serif" font-size="90" font-weight="700">Highway Pilot</text>
+  <text x="800" y="455" fill="#A8C0D8" font-family="Segoe UI, sans-serif" font-size="42" font-weight="500">AI Logistics Command Platform</text>
+  <text x="800" y="535" fill="#5BC0BE" font-family="Segoe UI, sans-serif" font-size="34" font-weight="600">Dispatch. Route. Predict. Scale.</text>
+</svg>

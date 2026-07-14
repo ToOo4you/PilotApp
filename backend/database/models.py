@@ -71,13 +71,24 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    # Legacy subscription fields
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     email = Column(String, index=True)
     plan = Column(String)  # starter | professional | enterprise
-    status = Column(String, default="inactive")  # active | inactive | cancelled | past_due
+    status = Column(String, default="inactive")
     stripe_customer_id = Column(String, nullable=True, index=True)
     stripe_subscription_id = Column(String, nullable=True, index=True)
+
+    # Billing service fields
+    company_id = Column(Integer, nullable=True)
+    customer_email = Column(String, index=True)
+    provider = Column(String, default="stripe")
+    provider_customer_id = Column(String, nullable=True, index=True)
+    provider_subscription_id = Column(String, nullable=True, index=True)
+    plan_key = Column(String)
     current_period_end = Column(DateTime, nullable=True)
+    cancel_at_period_end = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

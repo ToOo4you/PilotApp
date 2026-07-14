@@ -9,15 +9,18 @@ import json
 from datetime import datetime
 
 from sqlalchemy import func
+from sqlalchemy import text
 
 from backend.database.db import SessionLocal
 from backend.database.models import Job as JobModel
+from backend.routes.customers import customers as seed_customers
 from backend.services.route_optimizer import route_optimizer, RouteStop, Location
 from backend.services.dispatch_service import dispatch_service, Driver, Job
 from backend.services.maintenance_service import maintenance_service, VehicleData
 from backend.services.driver_analytics import driver_analytics, DriverMetrics
 from backend.services.forecasting_service import forecasting_service
 from backend.services.chatbot_service import chatbot
+from backend.services.ai_service import ai_service
 
 logger = logging.getLogger(__name__)
 
@@ -432,6 +435,150 @@ async def get_suggestions(session_id: str, context: str = "general"):
 
 # ============= Revenue / Earnings =============
 
+@router.get("/customer-fetch-subscribers")
+async def customer_fetch_subscribers(include_inactive: bool = False):
+    """Fetch customers and match them with subscription records, with AI insights."""
+    db = SessionLocal()
+    try:
+        subs = db.execute(text("SELECT * FROM subscriptions")).mappings().all()
+        subscribers_by_email: Dict[str, Dict[str, Any]] = {}
+
+        for sub in subs:
+            email = ((sub.get("customer_email") or sub.get("email") or "").strip().lower())
+            if not email:
+                continue
+
+            status = (sub.get("status") or "inactive").strip().lower()
+            if (not include_inactive) and status not in {"active", "trialing"}:
+                continue
+
+            subscribers_by_email[email] = {
+                "subscription_id": sub.get("id"),
+                "email": email,
+                "plan": sub.get("plan_key") or sub.get("plan"),
+                "status": status,
+                "provider": sub.get("provider") or "stripe",
+                "current_period_end": (
+                    sub.get("current_period_end").isoformat()
+                    if sub.get("current_period_end")
+                    else None
+                ),
+            }
+
+        matched_customers = []
+        non_subscriber_leads = []
+
+        def _lead_score(customer_row: Dict[str, Any]) -> int:
+            # Simple deterministic scoring until richer customer telemetry is available.
+            score = 55
+            email_value = (customer_row.get("email") or "").lower()
+            name_value = (customer_row.get("name") or "").lower()
+            contact_value = (customer_row.get("contact") or "").lower()
+
+            if any(token in email_value for token in ["logistics", "freight", "transport", "fleet"]):
+                score += 20
+            if any(token in name_value for token in ["inc", "llc", "logistics", "transport"]):
+                score += 10
+            if contact_value and contact_value != "n/a":
+                score += 5
+
+            return max(1, min(score, 99))
+
+        def _customer_rating(customer_row: Dict[str, Any], subscribed: bool) -> float:
+            base = 4.1 if subscribed else 3.9
+            name_value = (customer_row.get("name") or "").lower()
+            email_value = (customer_row.get("email") or "").lower()
+
+            if any(token in name_value for token in ["logistics", "transport", "freight"]):
+                base += 0.4
+            if any(token in email_value for token in ["ops", "dispatch", "fleet"]):
+                base += 0.2
+
+            return round(max(3.0, min(base, 5.0)), 1)
+
+        for customer in seed_customers:
+            email = (customer.get("email") or "").strip().lower()
+            sub = subscribers_by_email.get(email)
+            if sub:
+                rating = _customer_rating(customer, True)
+                matched_customers.append(
+                    {
+                        "id": customer.get("id"),
+                        "name": customer.get("name"),
+                        "contact": customer.get("contact"),
+                        "phone": customer.get("phone"),
+                        "email": customer.get("email"),
+                        "customer_rating": rating,
+                        "high_rating": rating >= 4.5,
+                        "subscription": sub,
+                    }
+                )
+            else:
+                score = _lead_score(customer)
+                rating = _customer_rating(customer, False)
+                non_subscriber_leads.append(
+                    {
+                        "id": customer.get("id"),
+                        "name": customer.get("name"),
+                        "contact": customer.get("contact"),
+                        "phone": customer.get("phone"),
+                        "email": customer.get("email"),
+                        "conversion_score": score,
+                        "customer_rating": rating,
+                        "high_rating": rating >= 4.5,
+                        "priority": "high" if score >= 75 else ("medium" if score >= 60 else "low"),
+                        "recommended_offer": (
+                            "14-day dispatch automation pilot"
+                            if score >= 75
+                            else "Starter plan with onboarding call"
+                        ),
+                    }
+                )
+
+        non_subscriber_leads.sort(key=lambda row: row.get("conversion_score", 0), reverse=True)
+
+        prompt = (
+            "You are a logistics revenue AI assistant. "
+            f"Total customers: {len(seed_customers)}. "
+            f"Subscriber customers: {len(matched_customers)}. "
+            "Write 2 concise recommendations to increase subscriber conversions and retention."
+        )
+
+        lead_prompt = (
+            "You are a B2B logistics growth strategist. "
+            f"Non-subscriber lead count: {len(non_subscriber_leads)}. "
+            "Provide one concise outreach strategy to convert top leads this week."
+        )
+
+        try:
+            ai_summary = await ai_service.call_ai(prompt, temperature=0.3)
+        except Exception:
+            ai_summary = (
+                "1) Launch a 14-day paid pilot with onboarding support for non-subscribers. "
+                "2) Offer annual discounts and usage-based upsell prompts to increase retention."
+            )
+
+        try:
+            lead_strategy = await ai_service.call_ai(lead_prompt, temperature=0.25)
+        except Exception:
+            lead_strategy = "Prioritize high-score leads with a 15-minute ROI demo and limited-time pilot offer."
+
+        return {
+            "status": "success",
+            "customers_total": len(seed_customers),
+            "subscriber_customers_total": len(matched_customers),
+            "subscriber_customers": matched_customers,
+            "non_subscriber_leads_total": len(non_subscriber_leads),
+            "non_subscriber_leads": non_subscriber_leads,
+            "ai_summary": ai_summary,
+            "lead_strategy": lead_strategy,
+        }
+    except Exception as e:
+        logger.error(f"Customer subscriber fetch error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
 @router.get("/earnings/{company_id}")
 async def get_earnings(company_id: int):
     """Get AI-powered earnings summary for a company"""
@@ -498,8 +645,11 @@ async def get_earnings(company_id: int):
 @router.get("/health")
 async def health_check():
     """Health check for AI services"""
+    ai_runtime = ai_service.get_health_status()
+    overall_status = "healthy" if ai_runtime["active_provider"] or ai_runtime["mock_mode"] else "degraded"
+
     return {
-        "status": "healthy",
+        "status": overall_status,
         "timestamp": datetime.now().isoformat(),
         "services": {
             "route_optimizer": "active",
@@ -507,6 +657,7 @@ async def health_check():
             "maintenance_service": "active",
             "driver_analytics": "active",
             "forecasting_service": "active",
-            "chatbot": "active"
-        }
+            "chatbot": "active",
+            "ai_runtime": ai_runtime,
+        },
     }

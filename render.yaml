@@ -18,6 +18,10 @@ services:
         value: openai
       - key: AI_MODEL_FALLBACK
         value: anthropic
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: ANTHROPIC_MODEL
+        value: claude-3-5-sonnet-latest
       - key: RATE_LIMIT_BACKEND
         value: auto
       - key: RATE_LIMIT_WINDOW_SECONDS
@@ -28,6 +32,20 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID_STARTER
+        sync: false
+      - key: STRIPE_PRICE_ID_PROFESSIONAL
+        sync: false
+      - key: STRIPE_PRICE_ID_ENTERPRISE
+        sync: false
+      - key: BILLING_MOCK_MODE
+        value: "false"
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL

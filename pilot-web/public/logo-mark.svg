@@ -1,0 +1,26 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hp-grad" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B132B"/>
+      <stop offset="0.55" stop-color="#1C2541"/>
+      <stop offset="1" stop-color="#3A506B"/>
+    </linearGradient>
+    <linearGradient id="road-grad" x1="126" y1="104" x2="386" y2="408" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5BC0BE"/>
+      <stop offset="1" stop-color="#00A8E8"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#hp-grad)"/>
+
+  <path d="M152 96C152 96 120 150 120 256C120 362 152 416 152 416H220C196 370 184 324 184 256C184 188 196 142 220 96H152Z" fill="url(#road-grad)"/>
+  <path d="M360 96C360 96 392 150 392 256C392 362 360 416 360 416H292C316 370 328 324 328 256C328 188 316 142 292 96H360Z" fill="url(#road-grad)"/>
+
+  <rect x="246" y="120" width="20" height="44" rx="10" fill="#EAFBFF"/>
+  <rect x="246" y="188" width="20" height="44" rx="10" fill="#EAFBFF"/>
+  <rect x="246" y="256" width="20" height="44" rx="10" fill="#EAFBFF"/>
+  <rect x="246" y="324" width="20" height="44" rx="10" fill="#EAFBFF"/>
+
+  <circle cx="98" cy="98" r="14" fill="#5BC0BE" opacity="0.6"/>
+  <circle cx="414" cy="414" r="14" fill="#00A8E8" opacity="0.6"/>
+</svg>

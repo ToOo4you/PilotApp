@@ -16,9 +16,24 @@ body {
   padding: 24px;
 }
 
+.brand-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(91, 192, 190, 0.35);
+}
+
 .sidebar h2 {
-  margin-bottom: 30px;
-  font-size: 28px;
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
 }
 
 .sidebar button {

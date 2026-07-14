@@ -45,6 +45,14 @@
       "destination": "https://pilotapp.onrender.com/jobs/:path*"
     },
     {
+      "source": "/subscriptions/",
+      "destination": "https://pilotapp.onrender.com/subscriptions/"
+    },
+    {
+      "source": "/subscriptions/:path*",
+      "destination": "https://pilotapp.onrender.com/subscriptions/:path*"
+    },
+    {
       "source": "/ops/:path*",
       "destination": "https://pilotapp.onrender.com/ops/:path*"
     },

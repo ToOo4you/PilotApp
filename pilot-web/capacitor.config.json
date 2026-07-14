@@ -1,0 +1,9 @@
+{
+  "appId": "com.highwaypilot.app",
+  "appName": "Highway Pilot",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}

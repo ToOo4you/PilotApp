@@ -41,11 +41,12 @@ class OpenAIProvider(AIProvider):
         openai.api_key = self.api_key
         self.client = openai.OpenAI(api_key=self.api_key)
     
-    async def call(self, prompt: str, model: str = "gpt-4", temperature: float = 0.7, **kwargs) -> str:
+    async def call(self, prompt: str, model: str = None, temperature: float = 0.7, **kwargs) -> str:
         """Call OpenAI API"""
         try:
+            model_name = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
             response = self.client.chat.completions.create(
-                model=model,
+                model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 **kwargs
@@ -65,11 +66,12 @@ class ClaudeProvider(AIProvider):
             raise RuntimeError("ANTHROPIC_API_KEY is not configured")
         self.client = Anthropic(api_key=self.api_key)
     
-    async def call(self, prompt: str, model: str = "claude-3-opus-20240229", **kwargs) -> str:
+    async def call(self, prompt: str, model: str = None, **kwargs) -> str:
         """Call Claude API"""
         try:
+            model_name = model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
             response = self.client.messages.create(
-                model=model,
+                model=model_name,
                 max_tokens=2048,
                 messages=[{"role": "user", "content": prompt}],
                 **kwargs
@@ -102,6 +104,31 @@ class AIServiceManager:
         self.primary_provider = os.getenv("AI_MODEL_PRIMARY", "openai")
         default_mock = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
         self.mock_mode = os.getenv("AI_MOCK_MODE", default_mock).lower() == "true"
+
+        # Auto-enable mock responses when no provider is configured so AI endpoints still function.
+        if self.openai_provider is None and self.claude_provider is None and not self.mock_mode:
+            logger.warning("No AI providers available; enabling mock mode fallback")
+            self.mock_mode = True
+
+    def _normalize_model_for_provider(self, model: Optional[str], provider_name: str) -> Optional[str]:
+        """Map legacy/unsupported model names to safer defaults by provider."""
+        if not model:
+            return None
+
+        if provider_name == "openai":
+            aliases = {
+                "gpt-4": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                "gpt-3.5-turbo": os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+            }
+            return aliases.get(model, model)
+
+        if provider_name == "claude":
+            aliases = {
+                "claude-3-opus-20240229": os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest"),
+            }
+            return aliases.get(model, model)
+
+        return model
     
     def get_provider(self, provider_name: str = None) -> AIProvider:
         """Get AI provider by name"""
@@ -123,21 +150,42 @@ class AIServiceManager:
     
     async def call_ai(self, prompt: str, provider: str = None, **kwargs) -> str:
         """Call AI with fallback support"""
+        requested_provider = provider or self.primary_provider
+        requested_model = kwargs.get("model")
+        kwargs["model"] = self._normalize_model_for_provider(requested_model, requested_provider)
+
         try:
             prov = self.get_provider(provider)
             return await prov.call(prompt, **kwargs)
         except Exception as e:
             logger.warning(f"Primary provider failed: {e}. Trying fallback...")
             # attempt fallback provider if available
-            fallback = "claude" if self.primary_provider == "openai" else "openai"
+            fallback = "claude" if requested_provider == "openai" else "openai"
             try:
                 fallback_prov = self.get_provider(fallback)
+                kwargs["model"] = self._normalize_model_for_provider(requested_model, fallback)
                 return await fallback_prov.call(prompt, **kwargs)
             except Exception:
                 if self.mock_mode:
                     logger.warning("AI providers unavailable, using mock mode response")
                     return self._mock_response(prompt)
                 raise
+
+    def get_health_status(self) -> Dict[str, Any]:
+        """Expose runtime provider status for diagnostics/health endpoints."""
+        active_provider = None
+        if self.openai_provider is not None:
+            active_provider = "openai"
+        elif self.claude_provider is not None:
+            active_provider = "claude"
+
+        return {
+            "primary_provider": self.primary_provider,
+            "active_provider": active_provider,
+            "openai_configured": self.openai_provider is not None,
+            "anthropic_configured": self.claude_provider is not None,
+            "mock_mode": self.mock_mode,
+        }
 
     def _mock_response(self, prompt: str) -> str:
         """Return deterministic JSON/text mock responses for local/staging without provider keys."""
