@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import stripe
 from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import text
 
 from backend.database.db import SessionLocal
 from backend.database.models import BillingSupportRequest, Subscription
@@ -245,16 +246,26 @@ def get_subscription_status(email: str):
 
     db = SessionLocal()
     try:
-        sub = db.query(Subscription).filter(Subscription.email == email).first()
-        if sub is None:
-            return {"subscribed": False, "plan": None, "status": "inactive"}
+        normalized_email = email.strip().lower()
+        rows = db.execute(text("SELECT * FROM subscriptions")).mappings().all()
 
-        return {
-            "subscribed": sub.status == "active",
-            "plan": sub.plan,
-            "status": sub.status,
-            "current_period_end": sub.current_period_end.isoformat() if sub.current_period_end else None,
-        }
+        for row in rows:
+            row_email = (row.get("email") or row.get("customer_email") or "").strip().lower()
+            if row_email != normalized_email:
+                continue
+
+            status_value = (row.get("status") or "inactive").strip().lower()
+            plan_value = row.get("plan") or row.get("plan_key")
+            period_end = row.get("current_period_end")
+
+            return {
+                "subscribed": status_value == "active",
+                "plan": plan_value,
+                "status": status_value,
+                "current_period_end": period_end.isoformat() if period_end else None,
+            }
+
+        return {"subscribed": False, "plan": None, "status": "inactive"}
     finally:
         db.close()
 
