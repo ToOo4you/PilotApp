@@ -247,7 +247,11 @@ def get_subscription_status(email: str):
     db = SessionLocal()
     try:
         normalized_email = email.strip().lower()
-        rows = db.execute(text("SELECT * FROM subscriptions")).mappings().all()
+        try:
+            rows = db.execute(text("SELECT * FROM subscriptions")).mappings().all()
+        except Exception as exc:
+            logger.warning("Subscription status fallback due to DB schema/runtime mismatch: %s", exc)
+            return {"subscribed": False, "plan": None, "status": "inactive"}
 
         for row in rows:
             row_email = (row.get("email") or row.get("customer_email") or "").strip().lower()
@@ -265,6 +269,9 @@ def get_subscription_status(email: str):
                 "current_period_end": period_end.isoformat() if period_end else None,
             }
 
+        return {"subscribed": False, "plan": None, "status": "inactive"}
+    except Exception as exc:
+        logger.warning("Subscription status fallback due to unexpected error: %s", exc)
         return {"subscribed": False, "plan": None, "status": "inactive"}
     finally:
         db.close()
