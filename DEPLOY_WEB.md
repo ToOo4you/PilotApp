@@ -25,7 +25,7 @@ Create or update your GitHub repo and push the latest code.
 5. In the web service Environment tab, set values for any variables marked manual:
    - OPENAI_API_KEY (required)
    - ANTHROPIC_API_KEY (optional)
-   - CORS_ORIGINS (temporary value: ["http://localhost:5173"]) 
+   - CORS_ORIGINS (production value: ["https://www.highwaypilotai.com"]) 
 6. Deploy and copy your API URL.
 
 Expected health endpoint:
@@ -46,17 +46,17 @@ Expected health endpoint:
 After Vercel gives your frontend URL, set this in Render:
 
 CORS_ORIGINS value example:
-["https://your-frontend.vercel.app"]
+["https://www.highwaypilotai.com"]
 
 Then redeploy backend.
 
-If you use a custom domain, include both domains:
-["https://your-frontend.vercel.app","https://www.yourdomain.com"]
+For this project, use the canonical domain:
+["https://www.highwaypilotai.com"]
 
 ## 5) Verify Public Production
 
 Frontend:
-- https://your-frontend.vercel.app
+- https://www.highwaypilotai.com
 
 Backend health:
 - https://YOUR-RENDER-API.onrender.com/api/ai/health
@@ -98,6 +98,6 @@ Optional for advanced features:
 3. Wait for green health at /api/ai/health.
 4. Deploy Vercel project from pilot-web.
 5. Set VITE_API_BASE_URL in Vercel.
-6. Copy Vercel URL into Render CORS_ORIGINS.
+6. Set Render CORS_ORIGINS to ["https://www.highwaypilotai.com"].
 7. Redeploy Render.
 8. Validate chat endpoint and frontend interactions publicly.

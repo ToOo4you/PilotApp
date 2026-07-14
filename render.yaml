@@ -53,7 +53,7 @@ services:
           name: pilot-db
           property: connectionString
       - key: CORS_ORIGINS
-        sync: false
+        value: '["https://www.highwaypilotai.com"]'
 
 databases:
   - name: pilot-db
