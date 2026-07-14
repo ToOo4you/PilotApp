@@ -39,8 +39,15 @@ PLANS = {
     },
 }
 
+# Check if mock mode is enabled for testing
+BILLING_MOCK_MODE = os.getenv("BILLING_MOCK_MODE", "false").lower() == "true"
+
 
 def _stripe_client() -> stripe.StripeClient:
+    if BILLING_MOCK_MODE:
+        # Return a dummy client for mock mode - won't actually be used
+        return stripe.StripeClient("sk_test_mock_mode_enabled")
+    
     secret_key = os.getenv("STRIPE_SECRET_KEY", "")
     if not secret_key:
         raise HTTPException(
@@ -109,6 +116,16 @@ def create_checkout_session(body: CheckoutRequest):
     plan = body.plan.lower()
     if plan not in PLANS:
         raise HTTPException(status_code=400, detail=f"Unknown plan '{plan}'.")
+
+    # Mock mode: return a test checkout URL
+    if BILLING_MOCK_MODE:
+        mock_session_id = f"cs_test_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
+        return {
+            "url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
+            "session_id": mock_session_id,
+            "checkout_url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
+            "mode": "mock"
+        }
 
     client = _stripe_client()
     price_id = _price_id(plan)
