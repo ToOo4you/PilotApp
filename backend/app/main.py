@@ -280,8 +280,7 @@ def initialize_database_schema():
     try:
         BillingSupportRequest.__table__.create(bind=engine, checkfirst=True)
     except Exception as exc:
-        logger.exception("Billing support table initialization failed: %s", exc)
-        raise
+        logger.warning("Billing support table initialization skipped: %s", exc)
 
     auto_init = os.getenv("DB_AUTO_INIT")
     if auto_init is None:
@@ -330,7 +329,6 @@ app.include_router(trailers_router)
 app.include_router(ai_router)
 app.include_router(operations_router)
 app.include_router(subscriptions_router)
-app.include_router(billing_router)
 app.include_router(billing_router)
 
 if FRONTEND_ASSETS_DIR.exists():
