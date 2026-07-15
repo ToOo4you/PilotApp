@@ -758,6 +758,79 @@ async def get_earnings(company_id: int):
         db.close()
 
 
+@router.get("/accountant-summary")
+async def accountant_summary(company_id: Optional[int] = None):
+    """Return AI-assisted accounting summary across jobs and billing signals."""
+    db = SessionLocal()
+    try:
+        completed_query = db.query(JobModel).filter(JobModel.status == "Completed")
+        active_query = db.query(JobModel).filter(JobModel.status.notin_(["Completed", "Cancelled"]))
+        if company_id is not None:
+            completed_query = completed_query.filter(JobModel.company_id == company_id)
+            active_query = active_query.filter(JobModel.company_id == company_id)
+
+        total_revenue = completed_query.with_entities(func.coalesce(func.sum(JobModel.price), 0)).scalar() or 0
+        completed_jobs = completed_query.with_entities(func.count(JobModel.id)).scalar() or 0
+        pending_revenue = active_query.with_entities(func.coalesce(func.sum(JobModel.price), 0)).scalar() or 0
+        pending_jobs = active_query.with_entities(func.count(JobModel.id)).scalar() or 0
+
+        avg_job_value = round(float(total_revenue) / max(int(completed_jobs), 1), 2) if completed_jobs else 0
+
+        sub_rows = db.execute(
+            text("SELECT status, COUNT(*) AS cnt FROM subscriptions GROUP BY status")
+        ).mappings().all()
+        subscription_status_counts = {
+            str(row.get("status") or "unknown"): int(row.get("cnt") or 0)
+            for row in sub_rows
+        }
+
+        prompt = (
+            "You are an AI accountant for a logistics company. "
+            f"Completed revenue: {float(total_revenue):.2f}. "
+            f"Pending revenue: {float(pending_revenue):.2f}. "
+            f"Completed jobs: {int(completed_jobs)}. Pending jobs: {int(pending_jobs)}. "
+            f"Average job value: {avg_job_value}. "
+            f"Subscription statuses: {subscription_status_counts}. "
+            "Provide 3 concise actions to improve cash flow, margin, and billing reliability."
+        )
+
+        try:
+            recommendations = await ai_service.call_ai(prompt, temperature=0.2)
+        except Exception:
+            recommendations = (
+                "1) Prioritize invoicing and collection workflows for high-value pending jobs. "
+                "2) Reduce low-margin routes and increase route density on active lanes. "
+                "3) Run weekly billing audits and reactivate inactive subscriptions with targeted offers."
+            )
+
+        utilization_ratio = 0
+        if (int(completed_jobs) + int(pending_jobs)) > 0:
+            utilization_ratio = round(
+                int(completed_jobs) / (int(completed_jobs) + int(pending_jobs)),
+                2,
+            )
+
+        return {
+            "status": "success",
+            "summary": {
+                "company_id": company_id,
+                "total_revenue": float(total_revenue),
+                "pending_revenue": float(pending_revenue),
+                "completed_jobs": int(completed_jobs),
+                "pending_jobs": int(pending_jobs),
+                "average_job_value": avg_job_value,
+                "subscription_status_counts": subscription_status_counts,
+                "utilization_ratio": utilization_ratio,
+            },
+            "recommendations": recommendations,
+        }
+    except Exception as exc:
+        logger.error(f"Accountant summary error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+    finally:
+        db.close()
+
+
 # ============= Health Check =============
 
 @router.get("/health")

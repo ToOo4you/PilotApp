@@ -13,6 +13,7 @@ import BillingSupport from './components/BillingSupport';
 import SubscriptionManager from './components/SubscriptionManager';
 import DailyTripChecklists from './components/DailyTripChecklists';
 import AIRecruiter from './components/AIRecruiter';
+import AIAccountant from './components/AIAccountant';
 import { API_BASE_URL } from './lib/api';
 
 function App() {
@@ -454,6 +455,10 @@ function App() {
       return <AIRecruiter />;
     }
 
+    if (page === 'AI Accountant') {
+      return <AIAccountant />;
+    }
+
     if (page === 'Directors') {
       return <AIChat />;
     }
@@ -487,6 +492,7 @@ function App() {
         <button onClick={() => setPage('Operations')}>Operations</button>
         <button onClick={() => setPage('Daily Trips')}>Daily Trips</button>
         <button onClick={() => setPage('AI Recruiter')}>AI Recruiter</button>
+        <button onClick={() => setPage('AI Accountant')}>AI Accountant</button>
         <button onClick={() => setPage('Directors')}>AI Directors</button>
         <button onClick={() => setPage('Jax')}>🚚 Operations Director</button>
         <div className="sidebar-divider" />
