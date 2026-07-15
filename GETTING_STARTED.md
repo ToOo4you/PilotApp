@@ -78,9 +78,9 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 **Terminal 1:**
 ```powershell
-cd backend
+cd PilotApp
 .\.venv\Scripts\Activate.ps1    # or: .venv\Scripts\activate.bat on CMD
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
 You should see:
@@ -183,7 +183,7 @@ Open your browser and visit:
 **Solution**: Make sure both servers are running
 ```powershell
 # Terminal 1: Backend
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn backend.app.main:app --reload --port 8000
 
 # Terminal 2: Frontend  
 npm run dev
@@ -192,7 +192,7 @@ npm run dev
 ### "ModuleNotFoundError: No module named 'fastapi'"
 **Solution**: Activate virtual environment
 ```powershell
-cd backend
+cd PilotApp
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -203,7 +203,7 @@ cd backend
 **Solution**: Use different ports
 ```powershell
 # Backend on port 8001
-uvicorn app.main:app --reload --port 8001
+python -m uvicorn backend.app.main:app --reload --port 8001
 
 # Frontend on port 5174
 npm run dev -- --port 5174

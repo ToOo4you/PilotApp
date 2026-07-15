@@ -14,66 +14,6 @@
   ],
   "rewrites": [
     {
-      "source": "/companies/",
-      "destination": "https://pilotapp.onrender.com/companies/"
-    },
-    {
-      "source": "/customers/",
-      "destination": "https://pilotapp.onrender.com/customers/"
-    },
-    {
-      "source": "/drivers/",
-      "destination": "https://pilotapp.onrender.com/drivers/"
-    },
-    {
-      "source": "/trucks/",
-      "destination": "https://pilotapp.onrender.com/trucks/"
-    },
-    {
-      "source": "/jobs/",
-      "destination": "https://pilotapp.onrender.com/jobs/"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "https://pilotapp.onrender.com/api/:path*"
-    },
-    {
-      "source": "/companies/:path*",
-      "destination": "https://pilotapp.onrender.com/companies/:path*"
-    },
-    {
-      "source": "/customers/:path*",
-      "destination": "https://pilotapp.onrender.com/customers/:path*"
-    },
-    {
-      "source": "/drivers/:path*",
-      "destination": "https://pilotapp.onrender.com/drivers/:path*"
-    },
-    {
-      "source": "/trucks/:path*",
-      "destination": "https://pilotapp.onrender.com/trucks/:path*"
-    },
-    {
-      "source": "/jobs/:path*",
-      "destination": "https://pilotapp.onrender.com/jobs/:path*"
-    },
-    {
-      "source": "/subscriptions/",
-      "destination": "https://pilotapp.onrender.com/subscriptions/"
-    },
-    {
-      "source": "/subscriptions/:path*",
-      "destination": "https://pilotapp.onrender.com/subscriptions/:path*"
-    },
-    {
-      "source": "/ops/:path*",
-      "destination": "https://pilotapp.onrender.com/ops/:path*"
-    },
-    {
-      "source": "/jax/:path*",
-      "destination": "https://pilotapp.onrender.com/jax/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

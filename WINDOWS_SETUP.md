@@ -56,7 +56,7 @@ Same as PowerShell but in classic Command Prompt format.
 
 ```powershell
 # Open PowerShell and navigate to PilotApp
-cd backend
+cd PilotApp
 
 # Create virtual environment
 python -m venv .venv
@@ -65,13 +65,13 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r backend\requirements.txt
 
 # Create .env file
-copy .env.example .env
+copy backend\.env.example backend\.env
 
 # Edit .env with your API keys
-notepad .env
+notepad backend\.env
 ```
 
 ### Step 2: Frontend Setup
@@ -91,9 +91,9 @@ npm install
 ### Terminal 1 - Backend Server
 
 ```powershell
-cd backend
+cd PilotApp
 .\.venv\Scripts\Activate.ps1
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
 You should see:

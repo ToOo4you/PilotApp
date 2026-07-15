@@ -153,21 +153,21 @@ Highway Pilot is a **next-generation logistics platform** that leverages artific
 
 #### 1. Backend Setup
 ```bash
-cd backend
+cd PilotApp
 
 # Create virtual environment
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
 # Configure environment
-cp .env.example .env
+cp backend/.env.example backend/.env
 # Edit .env with your API keys
 
 # Start server
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn backend.app.main:app --reload --port 8000
 ```
 
 #### 2. Frontend Setup

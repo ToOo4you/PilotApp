@@ -15,8 +15,9 @@ function Write-Step { Write-Host "📍 $args" -ForegroundColor Magenta }
 Write-Step "Step 1: Setting up Backend..."
 Write-Host ""
 
-# Navigate to backend
-Set-Location backend
+# Ensure we are running from repository root
+$repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $repoRoot
 
 # Check if Python is installed
 if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
@@ -42,7 +43,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # Install dependencies
 Write-Info "Installing Python dependencies (this may take a moment)..."
-pip install -r requirements.txt --quiet
+pip install -r backend\requirements.txt --quiet
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to install dependencies" -ForegroundColor Red
     exit 1
@@ -50,8 +51,8 @@ if ($LASTEXITCODE -ne 0) {
 
 # Setup environment
 Write-Info "Setting up environment file..."
-if (-not (Test-Path .env)) {
-    Copy-Item .env.example .env
+if (-not (Test-Path backend\.env)) {
+    Copy-Item backend\.env.example backend\.env
     Write-Warning "Please edit .env with your API keys:"
     Write-Host "   - OPENAI_API_KEY" -ForegroundColor Yellow
     Write-Host "   - ANTHROPIC_API_KEY" -ForegroundColor Yellow
@@ -69,7 +70,7 @@ Write-Step "Step 2: Setting up Frontend..."
 Write-Host ""
 
 # Navigate to frontend
-Set-Location ..\pilot-web
+Set-Location pilot-web
 
 # Check if Node.js is installed
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
@@ -95,13 +96,13 @@ Write-Host "To start the application, open TWO separate PowerShell windows:"
 Write-Host ""
 
 Write-Host "Terminal 1 - Backend:" -ForegroundColor Yellow
-Write-Host "  cd backend" -ForegroundColor White
+Write-Host "  cd $repoRoot" -ForegroundColor White
 Write-Host "  .\.venv\Scripts\Activate.ps1" -ForegroundColor White
-Write-Host "  uvicorn app.main:app --reload --port 8000" -ForegroundColor White
+Write-Host "  python -m uvicorn backend.app.main:app --reload --port 8000" -ForegroundColor White
 Write-Host ""
 
 Write-Host "Terminal 2 - Frontend:" -ForegroundColor Yellow
-Write-Host "  cd pilot-web" -ForegroundColor White
+Write-Host "  cd $repoRoot\pilot-web" -ForegroundColor White
 Write-Host "  npm run dev" -ForegroundColor White
 Write-Host ""
 

@@ -13,7 +13,8 @@ NC='\033[0m' # No Color
 
 # Step 1: Backend Setup
 echo -e "${BLUE}Step 1: Setting up Backend...${NC}"
-cd backend
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Create virtual environment
 echo "Creating Python virtual environment..."
@@ -26,12 +27,12 @@ source .venv/bin/activate  # For Linux/Mac
 
 # Install dependencies
 echo "Installing Python dependencies..."
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
 # Setup environment
 echo "Setting up environment file..."
-if [ ! -f .env ]; then
-    cp .env.example .env
+if [ ! -f backend/.env ]; then
+    cp backend/.env.example backend/.env
     echo -e "${YELLOW}⚠️  Please edit .env with your API keys:${NC}"
     echo "   - OPENAI_API_KEY"
     echo "   - ANTHROPIC_API_KEY"
@@ -46,7 +47,7 @@ echo ""
 
 # Step 2: Frontend Setup
 echo -e "${BLUE}Step 2: Setting up Frontend...${NC}"
-cd ../pilot-web
+cd "$SCRIPT_DIR/pilot-web"
 
 echo "Installing Node dependencies..."
 npm install
@@ -61,9 +62,9 @@ echo ""
 echo "To start the application:"
 echo ""
 echo -e "${YELLOW}Terminal 1 - Backend:${NC}"
-echo "  cd backend"
+echo "  cd $SCRIPT_DIR"
 echo "  source .venv/bin/activate"
-echo "  uvicorn app.main:app --reload --port 8000"
+echo "  python -m uvicorn backend.app.main:app --reload --port 8000"
 echo ""
 echo -e "${YELLOW}Terminal 2 - Frontend:${NC}"
 echo "  cd pilot-web"

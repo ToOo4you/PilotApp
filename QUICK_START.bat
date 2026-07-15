@@ -18,7 +18,7 @@ echo.
 echo [Backend Setup]
 echo ===============
 
-cd backend
+cd /d %~dp0
 
 REM Check if Python is installed
 python --version >nul 2>&1
@@ -52,7 +52,7 @@ if errorlevel 1 (
 REM Install dependencies
 echo Installing Python dependencies...
 echo (This may take a moment...)
-pip install -r requirements.txt
+pip install -r backend\requirements.txt
 if errorlevel 1 (
     echo ERROR: Failed to install dependencies
     pause
@@ -62,8 +62,8 @@ if errorlevel 1 (
 REM Setup environment
 echo.
 echo Setting up environment file...
-if not exist .env (
-    copy .env.example .env
+if not exist backend\.env (
+    copy backend\.env.example backend\.env
     echo.
     echo WARNING: Please edit .env with your API keys:
     echo   - OPENAI_API_KEY
@@ -83,7 +83,7 @@ echo [Frontend Setup]
 echo ================
 echo.
 
-cd ..\pilot-web
+cd /d %~dp0\pilot-web
 
 REM Check if Node.js is installed
 npm --version >nul 2>&1
@@ -115,9 +115,9 @@ echo.
 echo To start the application, open TWO separate Command Prompt windows:
 echo.
 echo Terminal 1 - Backend:
-echo   cd backend
+echo   cd %~dp0
 echo   .venv\Scripts\activate.bat
-echo   uvicorn app.main:app --reload --port 8000
+echo   python -m uvicorn backend.app.main:app --reload --port 8000
 echo.
 echo Terminal 2 - Frontend:
 echo   cd pilot-web

@@ -39,8 +39,9 @@ PLANS = {
     },
 }
 
-# Check if mock mode is enabled for testing
-BILLING_MOCK_MODE = os.getenv("BILLING_MOCK_MODE", "false").lower() == "true"
+# Default to mock billing in development so checkout works without Stripe keys.
+default_mock_mode = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
+BILLING_MOCK_MODE = os.getenv("BILLING_MOCK_MODE", default_mock_mode).lower() == "true"
 
 
 def _stripe_client() -> stripe.StripeClient:
