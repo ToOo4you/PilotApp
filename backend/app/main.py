@@ -29,6 +29,22 @@ if not logger.handlers:
 
 FRONTEND_DIST_DIR = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 FRONTEND_ASSETS_DIR = FRONTEND_DIST_DIR / "assets"
+RESERVED_BACKEND_PREFIXES = {
+    "api",
+    "auth",
+    "billing",
+    "companies",
+    "customers",
+    "dashboard",
+    "drivers",
+    "jobs",
+    "metrics",
+    "ops",
+    "subscriptions",
+    "trailers",
+    "trucks",
+    "jax",
+}
 
 
 def _load_allowed_origins():
@@ -342,6 +358,30 @@ def home():
         return FileResponse(index_file)
 
     return {"message": "Pilot App API Running"}
+
+
+@app.get("/{full_path:path}")
+def frontend_routes(full_path: str):
+    if not FRONTEND_DIST_DIR.exists():
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+    normalized = full_path.strip("/")
+    first_segment = normalized.split("/", 1)[0] if normalized else ""
+
+    if first_segment in RESERVED_BACKEND_PREFIXES:
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+    candidate = (FRONTEND_DIST_DIR / normalized).resolve()
+    dist_root = FRONTEND_DIST_DIR.resolve()
+    if str(candidate).startswith(str(dist_root)) and candidate.is_file():
+        return FileResponse(candidate)
+
+    # For SPA client-side routes, return index.html fallback.
+    index_file = FRONTEND_DIST_DIR / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+
+    return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
 
 @app.get("/metrics")
