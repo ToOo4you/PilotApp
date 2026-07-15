@@ -11,6 +11,7 @@ import OperationsCenter from './components/OperationsCenter';
 import Pricing from './components/Pricing';
 import BillingSupport from './components/BillingSupport';
 import SubscriptionManager from './components/SubscriptionManager';
+import DailyTripChecklists from './components/DailyTripChecklists';
 import { API_BASE_URL } from './lib/api';
 
 function App() {
@@ -26,10 +27,24 @@ function App() {
   const [subscribersLoading, setSubscribersLoading] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [billingVerificationError, setBillingVerificationError] = useState('');
+  const [marketingMode, setMarketingMode] = useState(false);
 
   // Check if returning from Stripe Checkout success redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const view = (params.get('view') || '').toLowerCase();
+
+    if (view === 'landing') {
+      setMarketingMode(true);
+      setPage('Landing');
+    } else if (view === 'subscribe') {
+      setMarketingMode(true);
+      setPage('Subscribe');
+    } else if (view === 'billing-support') {
+      setMarketingMode(true);
+      setPage('Billing Support');
+    }
+
     if (params.get('subscribed') === 'true') {
       const plan = params.get('plan') || '';
       const email = params.get('email') || '';
@@ -173,6 +188,67 @@ function App() {
   }, []);
 
   const renderPage = () => {
+    if (page === 'Landing') {
+      return (
+        <div className="wix-landing">
+          <div className="wix-hero">
+            <h1>Move Freight Faster With Highway Pilot AI</h1>
+            <p>
+              Automate dispatch, route planning, and driver operations from one AI-powered platform.
+            </p>
+            <div className="wix-hero-actions">
+              <button
+                className="wix-primary-btn"
+                onClick={() => {
+                  setMarketingMode(true);
+                  setPage('Subscribe');
+                }}
+              >
+                Start Paid Plan
+              </button>
+              <button
+                className="wix-secondary-btn"
+                onClick={() => {
+                  setMarketingMode(false);
+                  setPage('Dashboard');
+                }}
+              >
+                View Product Dashboard
+              </button>
+            </div>
+          </div>
+
+          <div className="wix-proof-grid">
+            <div className="wix-proof-card">
+              <h3>AI Dispatching</h3>
+              <p>Auto-assign jobs by location, rating, and capacity in real time.</p>
+            </div>
+            <div className="wix-proof-card">
+              <h3>Route Optimization</h3>
+              <p>Reduce miles, fuel spend, and late arrivals with dynamic route planning.</p>
+            </div>
+            <div className="wix-proof-card">
+              <h3>Predictive Operations</h3>
+              <p>Spot maintenance and retention risk before it impacts revenue.</p>
+            </div>
+          </div>
+
+          <div className="wix-bottom-cta">
+            <strong>Ready to turn your Wix traffic into paying subscribers?</strong>
+            <button
+              className="wix-primary-btn"
+              onClick={() => {
+                setMarketingMode(true);
+                setPage('Subscribe');
+              }}
+            >
+              Subscribe Now
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (page === 'Dashboard') {
       return (
         <>
@@ -369,6 +445,10 @@ function App() {
       return <OperationsCenter />;
     }
 
+    if (page === 'Daily Trips') {
+      return <DailyTripChecklists />;
+    }
+
     if (page === 'Directors') {
       return <AIChat />;
     }
@@ -386,7 +466,8 @@ function App() {
 
   return (
     <div className="app">
-      <aside className="sidebar">
+      {!marketingMode && (
+        <aside className="sidebar">
         <div className="brand-head">
           <img src="/logo-mark.svg" alt="Highway Pilot" className="brand-mark" />
           <h2>Highway Pilot</h2>
@@ -399,6 +480,7 @@ function App() {
         <button onClick={() => setPage('Jobs')}>Jobs</button>
         <button onClick={() => setPage('Dispatch')}>Dispatch</button>
         <button onClick={() => setPage('Operations')}>Operations</button>
+        <button onClick={() => setPage('Daily Trips')}>Daily Trips</button>
         <button onClick={() => setPage('Directors')}>AI Directors</button>
         <button onClick={() => setPage('Jax')}>🚚 Operations Director</button>
         <div className="sidebar-divider" />
@@ -407,7 +489,8 @@ function App() {
         </button>
         <button onClick={() => setPage('Billing Support')}>Billing Support</button>
         <button onClick={() => setPage('Subscription')}>Subscription</button>
-      </aside>
+        </aside>
+      )}
 
       <main className="main">{renderPage()}</main>
     </div>
