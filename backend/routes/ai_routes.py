@@ -601,18 +601,24 @@ async def recruiter_intelligence():
     """Generate AI-assisted recruiting opportunities across customers, companies, and clients."""
     db = SessionLocal()
     try:
-        companies = db.execute(
-            text(
-                """
-                SELECT id, company_name, owner_name, phone, email, industry
-                FROM companies
-                ORDER BY created_at DESC
-                LIMIT 120
-                """
-            )
-        ).mappings().all()
+        try:
+            companies = db.execute(
+                text(
+                    """
+                    SELECT id, company_name, owner_name, phone, email, industry
+                    FROM companies
+                    ORDER BY created_at DESC
+                    LIMIT 120
+                    """
+                )
+            ).mappings().all()
+        except Exception:
+            companies = []
 
-        subs = db.execute(text("SELECT customer_email, email, status, plan_key, plan FROM subscriptions")).mappings().all()
+        try:
+            subs = db.execute(text("SELECT customer_email, email, status, plan_key, plan FROM subscriptions")).mappings().all()
+        except Exception:
+            subs = []
         subscriber_emails = {
             ((row.get("customer_email") or row.get("email") or "").strip().lower()): row
             for row in subs
@@ -764,22 +770,31 @@ async def accountant_summary(company_id: Optional[int] = None):
     """Return AI-assisted accounting summary across jobs and billing signals."""
     db = SessionLocal()
     try:
-        completed_query = db.query(JobModel).filter(JobModel.status == "Completed")
-        active_query = db.query(JobModel).filter(JobModel.status.notin_(["Completed", "Cancelled"]))
-        if company_id is not None:
-            completed_query = completed_query.filter(JobModel.company_id == company_id)
-            active_query = active_query.filter(JobModel.company_id == company_id)
+        try:
+            completed_query = db.query(JobModel).filter(JobModel.status == "Completed")
+            active_query = db.query(JobModel).filter(JobModel.status.notin_(["Completed", "Cancelled"]))
+            if company_id is not None:
+                completed_query = completed_query.filter(JobModel.company_id == company_id)
+                active_query = active_query.filter(JobModel.company_id == company_id)
 
-        total_revenue = completed_query.with_entities(func.coalesce(func.sum(JobModel.price), 0)).scalar() or 0
-        completed_jobs = completed_query.with_entities(func.count(JobModel.id)).scalar() or 0
-        pending_revenue = active_query.with_entities(func.coalesce(func.sum(JobModel.price), 0)).scalar() or 0
-        pending_jobs = active_query.with_entities(func.count(JobModel.id)).scalar() or 0
+            total_revenue = completed_query.with_entities(func.coalesce(func.sum(JobModel.price), 0)).scalar() or 0
+            completed_jobs = completed_query.with_entities(func.count(JobModel.id)).scalar() or 0
+            pending_revenue = active_query.with_entities(func.coalesce(func.sum(JobModel.price), 0)).scalar() or 0
+            pending_jobs = active_query.with_entities(func.count(JobModel.id)).scalar() or 0
+        except Exception:
+            total_revenue = 0
+            completed_jobs = 0
+            pending_revenue = 0
+            pending_jobs = 0
 
         avg_job_value = round(float(total_revenue) / max(int(completed_jobs), 1), 2) if completed_jobs else 0
 
-        sub_rows = db.execute(
-            text("SELECT status, COUNT(*) AS cnt FROM subscriptions GROUP BY status")
-        ).mappings().all()
+        try:
+            sub_rows = db.execute(
+                text("SELECT status, COUNT(*) AS cnt FROM subscriptions GROUP BY status")
+            ).mappings().all()
+        except Exception:
+            sub_rows = []
         subscription_status_counts = {
             str(row.get("status") or "unknown"): int(row.get("cnt") or 0)
             for row in sub_rows
@@ -837,19 +852,26 @@ async def logistics_manager(company_id: Optional[int] = None):
     """Return AI-powered logistics operations summary and action plan."""
     db = SessionLocal()
     try:
-        jobs_query = db.query(JobModel)
-        drivers_query = db.query(DriverModel)
-        if company_id is not None:
-            jobs_query = jobs_query.filter(JobModel.company_id == company_id)
-            drivers_query = drivers_query.filter(DriverModel.company_id == company_id)
+        try:
+            jobs_query = db.query(JobModel)
+            drivers_query = db.query(DriverModel)
+            if company_id is not None:
+                jobs_query = jobs_query.filter(JobModel.company_id == company_id)
+                drivers_query = drivers_query.filter(DriverModel.company_id == company_id)
 
-        total_jobs = jobs_query.with_entities(func.count(JobModel.id)).scalar() or 0
-        completed_jobs = jobs_query.filter(JobModel.status == "Completed").with_entities(func.count(JobModel.id)).scalar() or 0
-        waiting_jobs = jobs_query.filter(JobModel.status == "Waiting").with_entities(func.count(JobModel.id)).scalar() or 0
-        active_jobs = jobs_query.filter(JobModel.status.notin_(["Completed", "Cancelled", "Waiting"]))\
-            .with_entities(func.count(JobModel.id)).scalar() or 0
+            total_jobs = jobs_query.with_entities(func.count(JobModel.id)).scalar() or 0
+            completed_jobs = jobs_query.filter(JobModel.status == "Completed").with_entities(func.count(JobModel.id)).scalar() or 0
+            waiting_jobs = jobs_query.filter(JobModel.status == "Waiting").with_entities(func.count(JobModel.id)).scalar() or 0
+            active_jobs = jobs_query.filter(JobModel.status.notin_(["Completed", "Cancelled", "Waiting"]))\
+                .with_entities(func.count(JobModel.id)).scalar() or 0
 
-        active_drivers = drivers_query.with_entities(func.count(DriverModel.id)).scalar() or 0
+            active_drivers = drivers_query.with_entities(func.count(DriverModel.id)).scalar() or 0
+        except Exception:
+            total_jobs = 0
+            completed_jobs = 0
+            waiting_jobs = 0
+            active_jobs = 0
+            active_drivers = 0
 
         completion_rate = round((int(completed_jobs) / max(int(total_jobs), 1)) * 100, 1) if total_jobs else 0.0
         backlog_pressure = int(waiting_jobs) + int(active_jobs)
