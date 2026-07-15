@@ -104,3 +104,20 @@ class BillingSupportRequest(Base):
     issue = Column(String, nullable=False)
     status = Column(String, default="open", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class DailyTripChecklist(Base):
+    __tablename__ = "daily_trip_checklists"
+
+    id = Column(Integer, primary_key=True, index=True)
+    checklist_date = Column(String, index=True, nullable=False, unique=True)
+    driver_name = Column(String, default="")
+    truck_unit = Column(String, default="")
+    start_odometer = Column(Integer, nullable=True)
+    end_odometer = Column(Integer, nullable=True)
+    pre_trip = Column(JSON, nullable=False)
+    post_trip = Column(JSON, nullable=False)
+    pre_trip_notes = Column(String, default="")
+    post_trip_notes = Column(String, default="")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from math import radians, sin, cos, asin, sqrt
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy import desc
 
 from backend.database.db import SessionLocal
-from backend.database.models import LogBookEntry
+from backend.database.models import DailyTripChecklist, LogBookEntry
 
 
 router = APIRouter(prefix="/ops", tags=["Operations"])
@@ -31,6 +31,23 @@ class LogBookEntryCreate(BaseModel):
     notes: Optional[str] = ""
 
 
+class ChecklistItem(BaseModel):
+    id: str
+    label: str
+    checked: bool
+
+
+class DailyTripChecklistUpsert(BaseModel):
+    driver_name: str = ""
+    truck_unit: str = ""
+    start_odometer: Optional[int] = None
+    end_odometer: Optional[int] = None
+    pre_trip: List[ChecklistItem] = Field(default_factory=list)
+    post_trip: List[ChecklistItem] = Field(default_factory=list)
+    pre_trip_notes: str = ""
+    post_trip_notes: str = ""
+
+
 def _parse_iso_datetime(value: str) -> datetime:
     normalized = value[:-1] if value.endswith("Z") else value
     return datetime.fromisoformat(normalized)
@@ -38,6 +55,23 @@ def _parse_iso_datetime(value: str) -> datetime:
 
 def _minutes_between(start: datetime, end: datetime) -> int:
     return max(0, int((end - start).total_seconds() // 60))
+
+
+def _serialize_daily_trip(row: DailyTripChecklist) -> dict[str, Any]:
+    return {
+        "id": row.id,
+        "checklist_date": row.checklist_date,
+        "driver_name": row.driver_name or "",
+        "truck_unit": row.truck_unit or "",
+        "start_odometer": row.start_odometer,
+        "end_odometer": row.end_odometer,
+        "pre_trip": row.pre_trip or [],
+        "post_trip": row.post_trip or [],
+        "pre_trip_notes": row.pre_trip_notes or "",
+        "post_trip_notes": row.post_trip_notes or "",
+        "created_at": row.created_at.isoformat() + "Z" if row.created_at else None,
+        "updated_at": row.updated_at.isoformat() + "Z" if row.updated_at else None,
+    }
 
 
 class DotRegulation(BaseModel):
@@ -249,6 +283,61 @@ def create_logbook_entry(payload: LogBookEntryCreate):
     return {
         "status": "success",
         "entry": entry,
+    }
+
+
+@router.get("/daily-trips")
+def get_daily_trips(checklist_date: Optional[str] = None, limit: int = 30):
+    db = SessionLocal()
+
+    if checklist_date:
+        row = db.query(DailyTripChecklist).filter(DailyTripChecklist.checklist_date == checklist_date).first()
+        db.close()
+        return {
+            "status": "success",
+            "record": _serialize_daily_trip(row) if row else None,
+        }
+
+    capped_limit = min(max(limit, 1), 120)
+    rows = (
+        db.query(DailyTripChecklist)
+        .order_by(desc(DailyTripChecklist.checklist_date))
+        .limit(capped_limit)
+        .all()
+    )
+    db.close()
+    return {
+        "status": "success",
+        "count": len(rows),
+        "records": [_serialize_daily_trip(row) for row in rows],
+    }
+
+
+@router.put("/daily-trips/{checklist_date}")
+def upsert_daily_trip(checklist_date: str, payload: DailyTripChecklistUpsert):
+    db = SessionLocal()
+    row = db.query(DailyTripChecklist).filter(DailyTripChecklist.checklist_date == checklist_date).first()
+
+    if row is None:
+        row = DailyTripChecklist(checklist_date=checklist_date, pre_trip=[], post_trip=[])
+        db.add(row)
+
+    row.driver_name = payload.driver_name
+    row.truck_unit = payload.truck_unit
+    row.start_odometer = payload.start_odometer
+    row.end_odometer = payload.end_odometer
+    row.pre_trip = [item.model_dump() for item in payload.pre_trip]
+    row.post_trip = [item.model_dump() for item in payload.post_trip]
+    row.pre_trip_notes = payload.pre_trip_notes
+    row.post_trip_notes = payload.post_trip_notes
+
+    db.commit()
+    db.refresh(row)
+    db.close()
+
+    return {
+        "status": "success",
+        "record": _serialize_daily_trip(row),
     }
 
 

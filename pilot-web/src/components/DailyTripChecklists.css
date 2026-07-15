@@ -8,6 +8,24 @@
   margin: 0;
 }
 
+.trip-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trip-save-status {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.trip-error {
+  margin-top: 8px;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 .trip-meta-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
