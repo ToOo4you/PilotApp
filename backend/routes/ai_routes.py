@@ -27,6 +27,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai", tags=["AI Services"])
 
 
+def _recruit_score(name: str, email: str, subscribed: bool = False) -> int:
+    score = 52
+    name_value = (name or "").lower()
+    email_value = (email or "").lower()
+
+    if any(token in name_value for token in ["logistics", "transport", "freight", "supply"]):
+        score += 18
+    if any(token in email_value for token in ["ops", "dispatch", "fleet", "sales"]):
+        score += 12
+    if subscribed:
+        score += 8
+
+    return max(1, min(score, 99))
+
+
 # ============= Route Optimization =============
 
 @router.post("/optimize-route")
@@ -576,6 +591,109 @@ async def customer_fetch_subscribers(include_inactive: bool = False):
     except Exception as e:
         logger.error(f"Customer subscriber fetch error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+@router.get("/recruiter-intelligence")
+async def recruiter_intelligence():
+    """Generate AI-assisted recruiting opportunities across customers, companies, and clients."""
+    db = SessionLocal()
+    try:
+        companies = db.execute(
+            text(
+                """
+                SELECT id, company_name, owner_name, phone, email, industry
+                FROM companies
+                ORDER BY created_at DESC
+                LIMIT 120
+                """
+            )
+        ).mappings().all()
+
+        subs = db.execute(text("SELECT customer_email, email, status, plan_key, plan FROM subscriptions")).mappings().all()
+        subscriber_emails = {
+            ((row.get("customer_email") or row.get("email") or "").strip().lower()): row
+            for row in subs
+            if (row.get("customer_email") or row.get("email"))
+        }
+
+        customer_targets = []
+        client_targets = []
+        company_targets = []
+
+        for customer in seed_customers:
+            email = (customer.get("email") or "").strip().lower()
+            subscribed = email in subscriber_emails
+            score = _recruit_score(customer.get("name", ""), email, subscribed=subscribed)
+            payload = {
+                "id": customer.get("id"),
+                "name": customer.get("name"),
+                "contact": customer.get("contact"),
+                "phone": customer.get("phone"),
+                "email": customer.get("email"),
+                "fit_score": score,
+                "priority": "high" if score >= 76 else ("medium" if score >= 62 else "low"),
+                "status": "subscriber" if subscribed else "prospect",
+            }
+            customer_targets.append(payload)
+            if not subscribed:
+                client_targets.append({
+                    **payload,
+                    "recommended_pitch": (
+                        "Offer a 14-day AI dispatch pilot with weekly ROI review."
+                        if score >= 75
+                        else "Offer a quick-start onboarding plus starter plan discount."
+                    ),
+                })
+
+        for company in companies:
+            email = (company.get("email") or "").strip().lower()
+            score = _recruit_score(company.get("company_name", ""), email)
+            company_targets.append(
+                {
+                    "id": company.get("id"),
+                    "company_name": company.get("company_name"),
+                    "owner_name": company.get("owner_name"),
+                    "phone": company.get("phone"),
+                    "email": company.get("email"),
+                    "industry": company.get("industry"),
+                    "fit_score": score,
+                    "priority": "high" if score >= 76 else ("medium" if score >= 62 else "low"),
+                }
+            )
+
+        customer_targets.sort(key=lambda row: row.get("fit_score", 0), reverse=True)
+        company_targets.sort(key=lambda row: row.get("fit_score", 0), reverse=True)
+        client_targets.sort(key=lambda row: row.get("fit_score", 0), reverse=True)
+
+        prompt = (
+            "You are a logistics growth strategist. "
+            f"Customer prospects: {len(customer_targets)}. "
+            f"Company prospects: {len(company_targets)}. "
+            f"Client prospects: {len(client_targets)}. "
+            "Provide a concise 3-step recruiting strategy for this week in plain English."
+        )
+
+        try:
+            recruiting_plan = await ai_service.call_ai(prompt, temperature=0.25)
+        except Exception:
+            recruiting_plan = (
+                "1) Prioritize high-fit prospects and schedule short ROI demos. "
+                "2) Launch a time-boxed pilot offer for medium-fit leads. "
+                "3) Follow up with weekly success metrics to convert and retain accounts."
+            )
+
+        return {
+            "status": "success",
+            "customer_targets": customer_targets[:20],
+            "company_targets": company_targets[:20],
+            "client_targets": client_targets[:20],
+            "recruiting_plan": recruiting_plan,
+        }
+    except Exception as exc:
+        logger.error(f"Recruiter intelligence error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
     finally:
         db.close()
 
