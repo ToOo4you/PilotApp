@@ -12,6 +12,7 @@ from sqlalchemy import func
 from sqlalchemy import text
 
 from backend.database.db import SessionLocal
+from backend.database.models import Driver as DriverModel
 from backend.database.models import Job as JobModel
 from backend.routes.customers import customers as seed_customers
 from backend.services.route_optimizer import route_optimizer, RouteStop, Location
@@ -826,6 +827,69 @@ async def accountant_summary(company_id: Optional[int] = None):
         }
     except Exception as exc:
         logger.error(f"Accountant summary error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+    finally:
+        db.close()
+
+
+@router.get("/logistics-manager")
+async def logistics_manager(company_id: Optional[int] = None):
+    """Return AI-powered logistics operations summary and action plan."""
+    db = SessionLocal()
+    try:
+        jobs_query = db.query(JobModel)
+        drivers_query = db.query(DriverModel)
+        if company_id is not None:
+            jobs_query = jobs_query.filter(JobModel.company_id == company_id)
+            drivers_query = drivers_query.filter(DriverModel.company_id == company_id)
+
+        total_jobs = jobs_query.with_entities(func.count(JobModel.id)).scalar() or 0
+        completed_jobs = jobs_query.filter(JobModel.status == "Completed").with_entities(func.count(JobModel.id)).scalar() or 0
+        waiting_jobs = jobs_query.filter(JobModel.status == "Waiting").with_entities(func.count(JobModel.id)).scalar() or 0
+        active_jobs = jobs_query.filter(JobModel.status.notin_(["Completed", "Cancelled", "Waiting"]))\
+            .with_entities(func.count(JobModel.id)).scalar() or 0
+
+        active_drivers = drivers_query.with_entities(func.count(DriverModel.id)).scalar() or 0
+
+        completion_rate = round((int(completed_jobs) / max(int(total_jobs), 1)) * 100, 1) if total_jobs else 0.0
+        backlog_pressure = int(waiting_jobs) + int(active_jobs)
+
+        plan_prompt = (
+            "You are an AI logistics manager. "
+            f"Total jobs: {int(total_jobs)}. "
+            f"Completed jobs: {int(completed_jobs)}. "
+            f"Waiting jobs: {int(waiting_jobs)}. "
+            f"In-flight jobs: {int(active_jobs)}. "
+            f"Active drivers: {int(active_drivers)}. "
+            f"Completion rate: {completion_rate}%. "
+            "Provide a concise operations action plan with 3 priorities for dispatch, fleet utilization, and service reliability."
+        )
+
+        try:
+            action_plan = await ai_service.call_ai(plan_prompt, temperature=0.25)
+        except Exception:
+            action_plan = (
+                "1) Dispatch waiting jobs by priority and nearest available capacity first. "
+                "2) Rebalance driver utilization to reduce idle time and bottlenecks. "
+                "3) Review delayed jobs every 2 hours and trigger proactive customer updates."
+            )
+
+        return {
+            "status": "success",
+            "summary": {
+                "company_id": company_id,
+                "total_jobs": int(total_jobs),
+                "completed_jobs": int(completed_jobs),
+                "waiting_jobs": int(waiting_jobs),
+                "active_jobs": int(active_jobs),
+                "active_drivers": int(active_drivers),
+                "completion_rate": completion_rate,
+                "backlog_pressure": backlog_pressure,
+            },
+            "action_plan": action_plan,
+        }
+    except Exception as exc:
+        logger.error(f"Logistics manager error: {exc}")
         raise HTTPException(status_code=500, detail=str(exc))
     finally:
         db.close()

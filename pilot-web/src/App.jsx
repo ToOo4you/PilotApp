@@ -14,6 +14,7 @@ import SubscriptionManager from './components/SubscriptionManager';
 import DailyTripChecklists from './components/DailyTripChecklists';
 import AIRecruiter from './components/AIRecruiter';
 import AIAccountant from './components/AIAccountant';
+import AILogisticsManager from './components/AILogisticsManager';
 import { API_BASE_URL } from './lib/api';
 
 function App() {
@@ -459,6 +460,10 @@ function App() {
       return <AIAccountant />;
     }
 
+    if (page === 'AI Logistics Manager') {
+      return <AILogisticsManager />;
+    }
+
     if (page === 'Directors') {
       return <AIChat />;
     }
@@ -493,6 +498,7 @@ function App() {
         <button onClick={() => setPage('Daily Trips')}>Daily Trips</button>
         <button onClick={() => setPage('AI Recruiter')}>AI Recruiter</button>
         <button onClick={() => setPage('AI Accountant')}>AI Accountant</button>
+        <button onClick={() => setPage('AI Logistics Manager')}>AI Logistics Manager</button>
         <button onClick={() => setPage('Directors')}>AI Directors</button>
         <button onClick={() => setPage('Jax')}>🚚 Operations Director</button>
         <div className="sidebar-divider" />
