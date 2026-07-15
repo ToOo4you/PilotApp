@@ -13,7 +13,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from backend.database.db import engine
-from backend.database.models import Base, BillingSupportRequest, Company, DailyTripChecklist
+from backend.database.models import (
+    Base,
+    BillingSupportRequest,
+    Company,
+    DailyTripChecklist,
+    Driver,
+    Job,
+    Subscription,
+)
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -294,15 +302,20 @@ def get_trucks():
 
 @app.on_event("startup")
 def initialize_database_schema():
-    try:
-        BillingSupportRequest.__table__.create(bind=engine, checkfirst=True)
-    except Exception as exc:
-        logger.warning("Billing support table initialization skipped: %s", exc)
+    essential_tables = [
+        Company.__table__,
+        Driver.__table__,
+        Job.__table__,
+        Subscription.__table__,
+        BillingSupportRequest.__table__,
+        DailyTripChecklist.__table__,
+    ]
 
-    try:
-        DailyTripChecklist.__table__.create(bind=engine, checkfirst=True)
-    except Exception as exc:
-        logger.warning("Daily trip checklist table initialization skipped: %s", exc)
+    for table in essential_tables:
+        try:
+            table.create(bind=engine, checkfirst=True)
+        except Exception as exc:
+            logger.warning("Table initialization skipped for %s: %s", table.name, exc)
 
     auto_init = os.getenv("DB_AUTO_INIT")
     if auto_init is None:
