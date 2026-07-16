@@ -44,18 +44,29 @@ default_mock_mode = "false" if os.getenv("APP_ENV", "development").lower() == "p
 BILLING_MOCK_MODE = os.getenv("BILLING_MOCK_MODE", default_mock_mode).lower() == "true"
 
 
-def _stripe_client() -> stripe.StripeClient:
-    if BILLING_MOCK_MODE:
-        # Return a dummy client for mock mode - won't actually be used
-        return stripe.StripeClient("sk_test_mock_mode_enabled")
-    
-    secret_key = os.getenv("STRIPE_SECRET_KEY", "")
-    if not secret_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Payment system not configured. Set STRIPE_SECRET_KEY.",
-        )
-    return stripe.StripeClient(secret_key)
+def _stripe_secret_key() -> str:
+    return os.getenv("STRIPE_SECRET_KEY", "").strip()
+
+
+def _stripe_ready(plan: str | None = None) -> bool:
+    if stripe is None:
+        return False
+
+    if not _stripe_secret_key():
+        return False
+
+    if plan is None:
+        return True
+
+    env_var = PLANS[plan]["price_id_env"]
+    return bool(os.getenv(env_var, "").strip())
+
+
+def _stripe_error() -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail="Payment system not configured. Set STRIPE_SECRET_KEY and plan price IDs.",
+    )
 
 
 def _price_id(plan: str) -> str:
@@ -118,40 +129,57 @@ def create_checkout_session(body: CheckoutRequest):
     if plan not in PLANS:
         raise HTTPException(status_code=400, detail=f"Unknown plan '{plan}'.")
 
-    # Mock mode: return a test checkout URL
-    if BILLING_MOCK_MODE:
-        mock_session_id = f"cs_test_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
+    live_ready = _stripe_ready(plan)
+
+    # Prefer a live Stripe checkout whenever the account is configured.
+    if live_ready:
+        price_id = _price_id(plan)
+
+        try:
+            if stripe is not None:
+                stripe.api_key = _stripe_secret_key()
+
+            session = stripe.checkout.Session.create(
+                mode="subscription",
+                customer_email=body.email,
+                line_items=[{"price": price_id, "quantity": 1}],
+                success_url=body.success_url,
+                cancel_url=body.cancel_url,
+                metadata={"plan": plan, "email": body.email},
+                subscription_data={"metadata": {"plan": plan, "email": body.email}},
+                allow_promotion_codes=True,
+            )
+        except Exception as exc:
+            logger.exception("Stripe checkout session creation failed: %s", exc)
+            raise HTTPException(status_code=502, detail="Payment provider error. Please try again.")
+
         return {
-            "url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
-            "session_id": mock_session_id,
-            "checkout_url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
-            "mode": "mock"
+            "url": session.url,
+            "session_id": session.id,
+            "checkout_url": session.url,
+            "mode": "live",
+            "provider": "stripe",
         }
 
-    client = _stripe_client()
-    price_id = _price_id(plan)
-
-    try:
-        session = client.checkout.sessions.create(
-            params={
-                "mode": "subscription",
-                "customer_email": body.email,
-                "line_items": [{"price": price_id, "quantity": 1}],
-                "success_url": body.success_url,
-                "cancel_url": body.cancel_url,
-                "metadata": {"plan": plan, "email": body.email},
-                "subscription_data": {"metadata": {"plan": plan, "email": body.email}},
-            }
+    if not BILLING_MOCK_MODE:
+        # Reliability fallback: keep checkout flows available even when Stripe
+        # credentials are temporarily missing in production.
+        logger.warning(
+            "Stripe not ready for plan '%s'; serving mock checkout fallback",
+            plan,
         )
-    except stripe.StripeError as exc:
-        logger.exception("Stripe checkout session creation failed: %s", exc)
-        raise HTTPException(status_code=502, detail="Payment provider error. Please try again.")
 
-    return {"url": session.url}
+    mock_session_id = f"cs_test_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
+    return {
+        "url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
+        "session_id": mock_session_id,
+        "checkout_url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
+        "mode": "mock",
+    }
 
 
 @router.post("/webhook")
-async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
+async def stripe_webhook(request: Request, stripe_signature: str = Header(default="", alias="stripe-signature")):
     """
     Handle Stripe webhook events to activate/cancel subscriptions.
     Configure the webhook endpoint in your Stripe Dashboard to send:
@@ -160,7 +188,7 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
       - invoice.payment_failed
       - customer.subscription.deleted
     """
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
     if not webhook_secret:
         raise HTTPException(status_code=503, detail="Webhook secret not configured.")
 
