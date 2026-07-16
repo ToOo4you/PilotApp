@@ -6,6 +6,7 @@ import os
 import uuid
 from dataclasses import dataclass
 from typing import Dict, Any
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 try:
     import stripe
@@ -32,10 +33,23 @@ class BillingService:
         default_mock = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
         self.mock_mode = os.getenv("BILLING_MOCK_MODE", default_mock).lower() == "true"
 
+        self.plan_aliases = {
+            "starter": "starter",
+            "growth": "professional",
+            "professional": "professional",
+            "enterprise": "enterprise",
+        }
+
         self.plan_price_ids = {
-            "starter": os.getenv("STRIPE_PRICE_STARTER", "").strip(),
-            "growth": os.getenv("STRIPE_PRICE_GROWTH", "").strip(),
-            "enterprise": os.getenv("STRIPE_PRICE_ENTERPRISE", "").strip(),
+            "starter": os.getenv("STRIPE_PRICE_ID_STARTER", os.getenv("STRIPE_PRICE_STARTER", "")).strip(),
+            "professional": os.getenv(
+                "STRIPE_PRICE_ID_PROFESSIONAL",
+                os.getenv("STRIPE_PRICE_GROWTH", ""),
+            ).strip(),
+            "enterprise": os.getenv(
+                "STRIPE_PRICE_ID_ENTERPRISE",
+                os.getenv("STRIPE_PRICE_ENTERPRISE", ""),
+            ).strip(),
         }
 
         self.catalog = {
@@ -45,9 +59,9 @@ class BillingService:
                 monthly_price_usd=49,
                 features=["AI chat", "Route optimization", "Basic analytics"],
             ),
-            "growth": Plan(
-                key="growth",
-                name="Growth",
+            "professional": Plan(
+                key="professional",
+                name="Professional",
                 monthly_price_usd=149,
                 features=["Everything in Starter", "Auto-dispatch", "Predictive maintenance"],
             ),
@@ -83,14 +97,16 @@ class BillingService:
         success_url: str,
         cancel_url: str,
     ) -> Dict[str, Any]:
-        if plan_key not in self.catalog:
+        normalized_plan_key = self.plan_aliases.get(plan_key, plan_key)
+
+        if normalized_plan_key not in self.catalog:
             raise ValueError("Unknown plan")
 
-        if self._is_stripe_ready() and self.plan_price_ids.get(plan_key):
+        if self._is_stripe_ready() and self.plan_price_ids.get(normalized_plan_key):
             session = stripe.checkout.Session.create(
                 mode="subscription",
                 customer_email=customer_email,
-                line_items=[{"price": self.plan_price_ids[plan_key], "quantity": 1}],
+                line_items=[{"price": self.plan_price_ids[normalized_plan_key], "quantity": 1}],
                 success_url=success_url,
                 cancel_url=cancel_url,
                 allow_promotion_codes=True,
@@ -106,7 +122,24 @@ class BillingService:
             raise RuntimeError("Stripe checkout is not configured for this plan")
 
         token = str(uuid.uuid4())
-        mock_url = f"{success_url}?mock_checkout=1&session_id={token}&plan={plan_key}"
+        split_url = urlsplit(success_url)
+        query = dict(parse_qsl(split_url.query, keep_blank_values=True))
+        query.update(
+            {
+                "mock_checkout": "1",
+                "session_id": token,
+                "plan": normalized_plan_key,
+            }
+        )
+        mock_url = urlunsplit(
+            (
+                split_url.scheme,
+                split_url.netloc,
+                split_url.path,
+                urlencode(query),
+                split_url.fragment,
+            )
+        )
         return {
             "checkout_url": mock_url,
             "session_id": token,
