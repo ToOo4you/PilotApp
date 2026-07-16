@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from backend.database.db import SessionLocal
 from backend.database.models import Subscription
@@ -14,6 +15,11 @@ except Exception:
     stripe = None
 
 router = APIRouter(prefix="/api/billing", tags=["Billing"])
+
+
+def _is_missing_table_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "relation \"subscriptions\" does not exist" in message or "no such table: subscriptions" in message
 
 
 class CheckoutRequest(BaseModel):
@@ -48,27 +54,32 @@ def create_checkout_session(payload: CheckoutRequest):
             cancel_url=payload.cancel_url,
         )
 
-        existing = (
-            db.query(Subscription)
-            .filter(Subscription.customer_email == payload.customer_email)
-            .order_by(Subscription.id.desc())
-            .first()
-        )
-
-        if existing is None:
-            existing = Subscription(
-                customer_email=payload.customer_email,
-                provider=result.get("provider", "stripe"),
-                plan_key=payload.plan.lower(),
-                status="pending",
+        try:
+            existing = (
+                db.query(Subscription)
+                .filter(Subscription.customer_email == payload.customer_email)
+                .order_by(Subscription.id.desc())
+                .first()
             )
-            db.add(existing)
-        else:
-            existing.provider = result.get("provider", "stripe")
-            existing.plan_key = payload.plan.lower()
-            existing.status = "pending"
 
-        db.commit()
+            if existing is None:
+                existing = Subscription(
+                    customer_email=payload.customer_email,
+                    provider=result.get("provider", "stripe"),
+                    plan_key=payload.plan.lower(),
+                    status="pending",
+                )
+                db.add(existing)
+            else:
+                existing.provider = result.get("provider", "stripe")
+                existing.plan_key = payload.plan.lower()
+                existing.status = "pending"
+
+            db.commit()
+        except (ProgrammingError, OperationalError) as exc:
+            db.rollback()
+            if not _is_missing_table_error(exc):
+                raise
 
         return {
             "status": "success",
@@ -103,12 +114,17 @@ def create_portal_session(payload: PortalRequest):
 def get_subscription_status(email: EmailStr):
     db = SessionLocal()
     try:
-        subscription = (
-            db.query(Subscription)
-            .filter(Subscription.customer_email == email)
-            .order_by(Subscription.id.desc())
-            .first()
-        )
+        try:
+            subscription = (
+                db.query(Subscription)
+                .filter(Subscription.customer_email == email)
+                .order_by(Subscription.id.desc())
+                .first()
+            )
+        except (ProgrammingError, OperationalError) as exc:
+            if _is_missing_table_error(exc):
+                return {"status": "success", "subscription": None}
+            raise
 
         if subscription is None:
             return {"status": "success", "subscription": None}
