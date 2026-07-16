@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime, timezone
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import stripe
 from fastapi import APIRouter, Header, HTTPException, Request
@@ -170,10 +171,28 @@ def create_checkout_session(body: CheckoutRequest):
         )
 
     mock_session_id = f"cs_test_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
+    split_url = urlsplit(body.success_url)
+    query = dict(parse_qsl(split_url.query, keep_blank_values=True))
+    query.update(
+        {
+            "mock_checkout": "1",
+            "session_id": mock_session_id,
+            "plan": plan,
+        }
+    )
+    mock_checkout_url = urlunsplit(
+        (
+            split_url.scheme,
+            split_url.netloc,
+            split_url.path,
+            urlencode(query),
+            split_url.fragment,
+        )
+    )
     return {
-        "url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
+        "url": mock_checkout_url,
         "session_id": mock_session_id,
-        "checkout_url": f"https://checkout.stripe.com/pay/cs_test_mock_{plan}",
+        "checkout_url": mock_checkout_url,
         "mode": "mock",
     }
 
