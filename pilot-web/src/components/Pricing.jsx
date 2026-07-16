@@ -66,7 +66,7 @@ function Pricing({ onSubscribed }) {
       const successUrl = `${window.location.origin}?subscribed=true&plan=${planId}&email=${encodeURIComponent(email)}`;
       const cancelUrl = window.location.href;
 
-      const res = await fetch(`${API_BASE_URL}/subscriptions/checkout`, {
+      const subscriptionsRes = await fetch(`${API_BASE_URL}/subscriptions/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,15 +76,41 @@ function Pricing({ onSubscribed }) {
           cancel_url: cancelUrl,
         }),
       });
+      const subscriptionsData = await subscriptionsRes.json().catch(() => ({}));
+      const subscriptionsUrl = subscriptionsData?.url || subscriptionsData?.checkout_url;
 
-      const data = await res.json();
+      const needsBillingFallback =
+        !subscriptionsRes.ok ||
+        !subscriptionsUrl ||
+        subscriptionsUrl.includes('checkout.stripe.com/pay/cs_test_mock_');
 
-      if (!res.ok) {
-        throw new Error(data.detail || 'Failed to start checkout.');
+      if (!needsBillingFallback) {
+        window.location.href = subscriptionsUrl;
+        return;
       }
 
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      const billingRes = await fetch(`${API_BASE_URL}/api/billing/checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: planId,
+          customer_email: email.trim(),
+          success_url: successUrl,
+          cancel_url: cancelUrl,
+        }),
+      });
+      const billingData = await billingRes.json().catch(() => ({}));
+      const billingUrl = billingData?.checkout?.checkout_url || billingData?.checkout_url || billingData?.url;
+
+      if (!billingRes.ok || !billingUrl) {
+        throw new Error(
+          billingData?.detail ||
+          subscriptionsData?.detail ||
+          'Failed to start checkout.'
+        );
+      }
+
+      window.location.href = billingUrl;
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
       setLoading(null);

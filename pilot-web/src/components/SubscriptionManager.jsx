@@ -4,30 +4,33 @@ import './SubscriptionManager.css';
 
 const DEFAULT_PLANS = [
   {
-    key: 'starter',
+    id: 'starter',
     name: 'Starter',
-    monthly_price_usd: 49,
+    price_usd: 49,
+    description: 'Up to 3 drivers · Core dispatch & routing',
     features: ['AI chat', 'Route optimization', 'Basic analytics']
   },
   {
-    key: 'growth',
-    name: 'Growth',
-    monthly_price_usd: 149,
+    id: 'professional',
+    name: 'Professional',
+    price_usd: 149,
+    description: 'Up to 15 drivers · Full AI suite · Priority support',
     features: ['Everything in Starter', 'Auto-dispatch', 'Predictive maintenance']
   },
   {
-    key: 'enterprise',
+    id: 'enterprise',
     name: 'Enterprise',
-    monthly_price_usd: 399,
+    price_usd: 399,
+    description: 'Unlimited drivers · Dedicated onboarding · SLA',
     features: ['Everything in Growth', 'Priority support', 'Custom integrations']
   }
 ];
 
 const SubscriptionManager = () => {
   const [email, setEmail] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState('growth');
+  const [selectedPlan, setSelectedPlan] = useState('professional');
   const [plans, setPlans] = useState(DEFAULT_PLANS);
-  const [billingStatus, setBillingStatus] = useState(null);
+  const [plansLoaded, setPlansLoaded] = useState(false);
   const [subscriptionState, setSubscriptionState] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,17 +38,14 @@ const SubscriptionManager = () => {
   useEffect(() => {
     const loadPlans = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/billing/plans`);
+        const response = await fetch(`${API_BASE_URL}/subscriptions/plans`);
         if (!response.ok) {
           return;
         }
         const data = await response.json();
-        if (data?.status === 'success') {
-          const apiPlans = data.billing?.plans;
-          if (Array.isArray(apiPlans) && apiPlans.length > 0) {
-            setPlans(apiPlans);
-          }
-          setBillingStatus(data.billing || null);
+        if (Array.isArray(data) && data.length > 0) {
+          setPlans(data);
+          setPlansLoaded(true);
         }
       } catch (err) {
         console.error('Unable to fetch billing plans', err);
@@ -56,7 +56,7 @@ const SubscriptionManager = () => {
   }, []);
 
   const selectedPlanInfo = useMemo(
-    () => plans.find((plan) => plan.key === selectedPlan),
+    () => plans.find((plan) => plan.id === selectedPlan),
     [plans, selectedPlan]
   );
 
@@ -70,28 +70,53 @@ const SubscriptionManager = () => {
     try {
       setLoading(true);
       const currentUrl = window.location.origin;
-      const response = await fetch(`${API_BASE_URL}/api/billing/checkout-session`, {
+      const successUrl = `${currentUrl}?subscribed=true&plan=${selectedPlan}&email=${encodeURIComponent(email.trim())}`;
+      const subscriptionsResponse = await fetch(`${API_BASE_URL}/subscriptions/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          email: email.trim(),
+          success_url: successUrl,
+          cancel_url: window.location.href
+        })
+      });
+      const subscriptionsData = await subscriptionsResponse.json().catch(() => ({}));
+      const subscriptionsUrl = subscriptionsData?.url || subscriptionsData?.checkout_url;
+
+      const needsBillingFallback =
+        !subscriptionsResponse.ok ||
+        !subscriptionsUrl ||
+        subscriptionsUrl.includes('checkout.stripe.com/pay/cs_test_mock_');
+
+      if (!needsBillingFallback) {
+        window.location.assign(subscriptionsUrl);
+        return;
+      }
+
+      const billingResponse = await fetch(`${API_BASE_URL}/api/billing/checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           plan: selectedPlan,
           customer_email: email.trim(),
-          success_url: `${currentUrl}/?billing=success`,
-          cancel_url: `${currentUrl}/?billing=cancelled`
-        })
+          success_url: successUrl,
+          cancel_url: window.location.href,
+        }),
       });
 
-      const data = await response.json();
-      if (!response.ok || data?.status !== 'success') {
-        throw new Error(data?.detail || 'Unable to create subscription checkout session.');
+      const billingData = await billingResponse.json().catch(() => ({}));
+      const billingUrl = billingData?.checkout?.checkout_url || billingData?.checkout_url || billingData?.url;
+
+      if (!billingResponse.ok || !billingUrl) {
+        throw new Error(
+          billingData?.detail ||
+          subscriptionsData?.detail ||
+          'Unable to create subscription checkout session.'
+        );
       }
 
-      const checkoutUrl = data.checkout?.checkout_url;
-      if (!checkoutUrl) {
-        throw new Error('Checkout URL missing in billing response.');
-      }
-
-      window.location.assign(checkoutUrl);
+      window.location.assign(billingUrl);
     } catch (err) {
       setError(err.message || 'Subscription checkout failed.');
     } finally {
@@ -108,13 +133,13 @@ const SubscriptionManager = () => {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/billing/subscription-status?email=${encodeURIComponent(email.trim())}`
+        `${API_BASE_URL}/subscriptions/status?email=${encodeURIComponent(email.trim())}`
       );
       const data = await response.json();
-      if (!response.ok || data?.status !== 'success') {
+      if (!response.ok) {
         throw new Error(data?.detail || 'Unable to load subscription status.');
       }
-      setSubscriptionState(data.subscription || null);
+      setSubscriptionState(data || null);
     } catch (err) {
       setError(err.message || 'Unable to load subscription status.');
     }
@@ -128,27 +153,28 @@ const SubscriptionManager = () => {
       </div>
 
       <div className="billing-health">
-        <span>Billing provider:</span>
+        <span>Plan source:</span>
         <strong>
-          {billingStatus?.stripe_ready ? 'Stripe Live' : billingStatus?.mock_mode ? 'Mock Mode' : 'Unavailable'}
+          {plansLoaded ? 'Backend Live Plans' : 'Default Plans'}
         </strong>
       </div>
 
       <div className="plan-grid">
         {plans.map((plan) => {
-          const isActive = plan.key === selectedPlan;
+          const isActive = plan.id === selectedPlan;
           return (
             <button
               type="button"
-              key={plan.key}
+              key={plan.id}
               className={`plan-card ${isActive ? 'active' : ''}`}
-              onClick={() => setSelectedPlan(plan.key)}
+              onClick={() => setSelectedPlan(plan.id)}
             >
               <h3>{plan.name}</h3>
-              <p className="price">${plan.monthly_price_usd}/mo</p>
+              <p className="price">${plan.price_usd}/mo</p>
+              <p>{plan.description}</p>
               <ul>
                 {(plan.features || []).map((feature) => (
-                  <li key={`${plan.key}-${feature}`}>{feature}</li>
+                  <li key={`${plan.id}-${feature}`}>{feature}</li>
                 ))}
               </ul>
             </button>
@@ -177,9 +203,10 @@ const SubscriptionManager = () => {
         </button>
         {subscriptionState && (
           <div className="status-box">
-            <p><strong>State:</strong> {subscriptionState.state}</p>
+            <p><strong>Subscribed:</strong> {subscriptionState.subscribed ? 'Yes' : 'No'}</p>
+            <p><strong>Status:</strong> {subscriptionState.status || 'inactive'}</p>
             <p><strong>Plan:</strong> {subscriptionState.plan}</p>
-            <p><strong>Provider:</strong> {subscriptionState.provider}</p>
+            <p><strong>Period End:</strong> {subscriptionState.current_period_end || 'N/A'}</p>
           </div>
         )}
       </div>
