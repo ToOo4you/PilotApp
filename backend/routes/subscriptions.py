@@ -163,12 +163,8 @@ def create_checkout_session(body: CheckoutRequest):
         }
 
     if not BILLING_MOCK_MODE:
-        # Reliability fallback: keep checkout flows available even when Stripe
-        # credentials are temporarily missing in production.
-        logger.warning(
-            "Stripe not ready for plan '%s'; serving mock checkout fallback",
-            plan,
-        )
+        logger.error("Stripe checkout is not configured for plan '%s'", plan)
+        raise _stripe_error()
 
     mock_session_id = f"cs_test_{plan}_{int(datetime.now(timezone.utc).timestamp())}"
     split_url = urlsplit(body.success_url)

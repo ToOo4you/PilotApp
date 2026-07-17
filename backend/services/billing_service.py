@@ -1,5 +1,5 @@
 """
-Subscription billing service (Stripe-enabled with safe fallback mode).
+Subscription billing service with Stripe and explicit development mock mode.
 """
 import logging
 import os
@@ -29,7 +29,7 @@ class BillingService:
         self.stripe_secret_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
         self.stripe_publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip()
 
-        # Auto fallback keeps checkout flow testable when Stripe is not wired yet.
+        # Keep checkout testable by default in development, but fail closed in production.
         default_mock = "false" if os.getenv("APP_ENV", "development").lower() == "production" else "true"
         self.mock_mode = os.getenv("BILLING_MOCK_MODE", default_mock).lower() == "true"
 
@@ -76,8 +76,7 @@ class BillingService:
         if stripe is not None and self.stripe_secret_key:
             stripe.api_key = self.stripe_secret_key
         elif not self.mock_mode:
-            logger.warning("Stripe is not configured; enabling billing mock mode")
-            self.mock_mode = True
+            logger.error("Stripe is not configured and billing mock mode is disabled")
 
     def _is_stripe_ready(self) -> bool:
         return stripe is not None and bool(self.stripe_secret_key)

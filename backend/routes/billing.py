@@ -88,6 +88,9 @@ def create_checkout_session(payload: CheckoutRequest):
     except ValueError as exc:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        db.rollback()
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Unable to create checkout session: {exc}") from exc
