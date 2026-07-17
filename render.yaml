@@ -39,11 +39,11 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
       - key: STRIPE_PRICE_ID_STARTER
-        sync: false
+        value: price_1Tu5RFHQjATdKGgypPl86Gji
       - key: STRIPE_PRICE_ID_PROFESSIONAL
-        sync: false
+        value: price_1Tu5RyHQjATdKGgyWUehvGAG
       - key: STRIPE_PRICE_ID_ENTERPRISE
-        sync: false
+        value: price_1Tu5SEHQjATdKGgyF2D5M89q
       - key: BILLING_MOCK_MODE
         value: "false"
       - key: SECRET_KEY
